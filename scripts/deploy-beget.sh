@@ -7,7 +7,12 @@ set -euo pipefail
 
 npm run check
 
-rsync -az --delete \
+rsync -rz --delete \
+  --no-perms \
+  --no-owner \
+  --no-group \
+  --no-times \
+  --omit-dir-times \
   --exclude='.DS_Store' \
   dist/ "${BEGET_USER}@${BEGET_HOST}:${BEGET_PATH}/"
 
