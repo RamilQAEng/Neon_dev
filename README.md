@@ -15,7 +15,21 @@
 ```bash
 npm install
 npm run dev
+npm run check
 npm run build
 ```
 
 После `npm run build` готовая версия будет в папке `dist`. Ее можно загрузить на хостинг вместо текущего содержимого `public_html`.
+
+## Деплой на Beget
+
+Перед деплоем задайте переменные окружения:
+
+```bash
+export BEGET_HOST="ssh.beget.com"
+export BEGET_USER="login"
+export BEGET_PATH="/home/login/neon-dev.ru/public_html"
+npm run deploy:beget
+```
+
+Скрипт запускает проверки, собирает `dist` и отправляет на сервер только содержимое папки `dist/`.
