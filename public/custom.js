@@ -206,9 +206,7 @@
 
   function hookCtaButtons() {
     const shouldOpenModal = (element) => {
-      const text = (element.textContent || '').trim().toLowerCase();
-      const href = element.getAttribute('href') || '';
-      return href === '#contact' || text.includes('обсудить проект') || text.includes('хочу такой сайт') || text.includes('написать мне');
+      return element.hasAttribute('data-open-modal');
     };
 
     document.addEventListener('click', (event) => {

@@ -1,29 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight,
   ArrowUp,
   Check,
+  CheckCircle2,
+  ChevronDown,
   Code2,
   CreditCard,
   Eye,
   FileText,
   Layers3,
+  Loader2,
   Menu,
   MessageCircle,
   MonitorSmartphone,
   Rocket,
+  Send,
   ShieldCheck,
+  Star,
   Timer,
   X,
   XCircle,
   Zap
 } from 'lucide-react';
-import { portfolio, pricingTiers, workflow } from './data.js';
+import { faqItems, portfolio, pricingTiers, testimonials, workflow } from './data.js';
 
 const navItems = [
   ['Тарифы', '#services'],
-  ['Портфолио', '#portfolio'],
+  ['Кейсы', '#portfolio'],
   ['Процесс', '#workflow'],
   ['Условия', '#terms'],
   ['Контакт', '#contact']
@@ -62,6 +67,7 @@ const tierAccent = {
 const PROMO_DURATION_MS = 5 * 60 * 1000;
 const PROMO_STORAGE_KEY = 'neonPromoExpiresAt';
 const PROMO_EVENT = 'neon-promo-activated';
+const PROMO_DISCOUNT = 15000;
 
 function scrollToId(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -74,6 +80,10 @@ function formatPromoTime(ms) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+function formatPrice(amount) {
+  return amount.toLocaleString('ru-RU') + ' ₽';
+}
+
 function activatePromoCode() {
   const nextExpiresAt = Date.now() + PROMO_DURATION_MS;
   window.localStorage.setItem(PROMO_STORAGE_KEY, String(nextExpiresAt));
@@ -81,55 +91,50 @@ function activatePromoCode() {
   return nextExpiresAt;
 }
 
-function PromoAnchor() {
-  const [expiresAt, setExpiresAt] = useState(null);
+function usePromoTimer() {
+  const [expiresAt, setExpiresAt] = useState(() => {
+    const stored = Number(window.localStorage.getItem(PROMO_STORAGE_KEY));
+    return stored > Date.now() ? stored : null;
+  });
   const [remaining, setRemaining] = useState(PROMO_DURATION_MS);
 
   useEffect(() => {
-    const stored = Number(window.localStorage.getItem(PROMO_STORAGE_KEY));
-    if (stored > Date.now()) {
-      setExpiresAt(stored);
-      setRemaining(stored - Date.now());
-    }
-
-    const onPromoActivated = (event) => {
-      const nextExpiresAt = event.detail?.expiresAt;
-      if (nextExpiresAt) {
-        setExpiresAt(nextExpiresAt);
-        setRemaining(nextExpiresAt - Date.now());
-      }
+    const onActivated = (e) => {
+      const next = e.detail?.expiresAt;
+      if (next) { setExpiresAt(next); setRemaining(next - Date.now()); }
     };
-
-    window.addEventListener(PROMO_EVENT, onPromoActivated);
-    return () => window.removeEventListener(PROMO_EVENT, onPromoActivated);
+    window.addEventListener(PROMO_EVENT, onActivated);
+    return () => window.removeEventListener(PROMO_EVENT, onActivated);
   }, []);
 
   useEffect(() => {
     if (!expiresAt) return undefined;
-
     const tick = () => {
-      const nextRemaining = expiresAt - Date.now();
-      if (nextRemaining <= 0) {
+      const next = expiresAt - Date.now();
+      if (next <= 0) {
         window.localStorage.removeItem(PROMO_STORAGE_KEY);
         setExpiresAt(null);
         setRemaining(PROMO_DURATION_MS);
         return;
       }
-      setRemaining(nextRemaining);
+      setRemaining(next);
     };
-
     tick();
-    const timer = window.setInterval(tick, 1000);
-    return () => window.clearInterval(timer);
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
   }, [expiresAt]);
 
-  const active = Boolean(expiresAt);
-
-  const activatePromo = () => {
-    const nextExpiresAt = activatePromoCode();
-    setExpiresAt(nextExpiresAt);
+  const activate = () => {
+    const next = activatePromoCode();
+    setExpiresAt(next);
     setRemaining(PROMO_DURATION_MS);
   };
+
+  return { active: Boolean(expiresAt), remaining, activate };
+}
+
+function PromoAnchor() {
+  const { active, remaining, activate } = usePromoTimer();
 
   return (
     <motion.aside
@@ -156,57 +161,39 @@ function PromoAnchor() {
         <span>{active ? 'бронь активна' : 'активация на 5 минут'}</span>
         <b>{formatPromoTime(remaining)}</b>
       </div>
-      <a
-        href="#contact"
-        onClick={activatePromo}
+      <button
+        onClick={activate}
         data-plan="Промокод NEON-15"
         data-price="скидка 15 000 ₽"
         className="promo-anchor__cta"
       >
-        {active ? 'Забрать скидку' : 'Активировать'}
+        {active ? 'Скидка активна!' : 'Активировать'}
         <ArrowRight className="w-4 h-4" />
-      </a>
+      </button>
     </motion.aside>
   );
 }
 
 function FloatingPromo() {
   const [visible, setVisible] = useState(false);
-  const [active, setActive] = useState(false);
+  const { active, activate } = usePromoTimer();
 
   useEffect(() => {
     const onScroll = () => setVisible(window.pageYOffset > 520);
-    const stored = Number(window.localStorage.getItem(PROMO_STORAGE_KEY));
-    setActive(stored > Date.now());
     window.addEventListener('scroll', onScroll);
     onScroll();
-
-    const onPromoActivated = () => setActive(true);
-    window.addEventListener(PROMO_EVENT, onPromoActivated);
-
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener(PROMO_EVENT, onPromoActivated);
-    };
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  const handleClick = () => {
-    activatePromoCode();
-    setActive(true);
-  };
 
   return (
     <AnimatePresence>
       {visible && (
-        <motion.a
-          href="#contact"
-          onClick={handleClick}
+        <motion.button
+          onClick={activate}
           initial={{ opacity: 0, x: 18, scale: 0.88 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 18, scale: 0.88 }}
           className={`floating-promo ${active ? 'floating-promo--active' : ''}`}
-          data-plan="Промокод NEON-15"
-          data-price="скидка 15 000 ₽"
           aria-label="Активировать промокод NEON-15 на скидку 15 000 рублей"
         >
           <span className="floating-promo__icon">
@@ -216,13 +203,57 @@ function FloatingPromo() {
             <b>{active ? 'NEON-15' : '-15K'}</b>
             <small>{active ? 'активен' : 'промо'}</small>
           </span>
-        </motion.a>
+        </motion.button>
       )}
     </AnimatePresence>
   );
 }
 
-function Header() {
+function PromoInModal({ rawPrice }) {
+  const { active, remaining, activate } = usePromoTimer();
+  const discounted = rawPrice ? rawPrice - PROMO_DISCOUNT : null;
+
+  return (
+    <div className={`promo-in-modal ${active ? 'promo-in-modal--active' : ''}`}>
+      <div className="promo-in-modal__row">
+        <span className="promo-in-modal__icon"><Zap className="w-4 h-4" /></span>
+        <span className="promo-in-modal__code">NEON-15</span>
+        {active && <span className="promo-in-modal__badge">Активен</span>}
+      </div>
+
+      {rawPrice ? (
+        <div className="promo-in-modal__price">
+          {active ? (
+            <>
+              <span className="promo-in-modal__old">от {formatPrice(rawPrice)}</span>
+              <strong className="promo-in-modal__new">от {formatPrice(discounted)}</strong>
+            </>
+          ) : (
+            <span className="promo-in-modal__hint">Активируй и сэкономь <b>−15 000 ₽</b> на этом тарифе</span>
+          )}
+        </div>
+      ) : (
+        <div className="promo-in-modal__price">
+          <span className="promo-in-modal__hint">Скидка <b>−15 000 ₽</b> на любой тариф</span>
+        </div>
+      )}
+
+      {active ? (
+        <div className="promo-in-modal__timer">
+          <Timer className="w-3.5 h-3.5" />
+          <span>Скидка зафиксирована — осталось {formatPromoTime(remaining)}</span>
+        </div>
+      ) : (
+        <button onClick={activate} className="promo-in-modal__activate">
+          <Zap className="w-3.5 h-3.5" />
+          Активировать скидку −15 000 ₽
+        </button>
+      )}
+    </div>
+  );
+}
+
+function Header({ openModal }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -253,7 +284,10 @@ function Header() {
               <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-cyber-neon group-hover:w-full transition-all duration-300" />
             </a>
           ))}
-          <button onClick={() => scrollToId('contact')} className="ml-6 px-8 py-3 border border-cyber-neon text-cyber-neon font-header font-bold tracking-wider text-sm hover:bg-cyber-neon hover:text-white hover:shadow-neon transition-all duration-300 uppercase">
+          <button
+            onClick={() => openModal()}
+            className="ml-6 px-8 py-3 border border-cyber-neon text-cyber-neon font-header font-bold tracking-wider text-sm hover:bg-cyber-neon hover:text-white hover:shadow-neon transition-all duration-300 uppercase"
+          >
             Обсудить проект
           </button>
         </div>
@@ -272,10 +306,7 @@ function Header() {
               </a>
             ))}
             <button
-              onClick={() => {
-                setOpen(false);
-                scrollToId('contact');
-              }}
+              onClick={() => { setOpen(false); openModal(); }}
               className="w-full py-4 bg-cyber-neon text-white font-bold uppercase tracking-widest"
             >
               Обсудить проект
@@ -287,7 +318,7 @@ function Header() {
   );
 }
 
-function Hero() {
+function Hero({ openModal }) {
   return (
     <section id="hero" className="min-h-screen flex flex-col justify-center relative pt-20 overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(157,111,255,0.16),transparent_32%),linear-gradient(245deg,rgba(0,255,209,0.12),transparent_30%)]" />
@@ -343,9 +374,12 @@ function Hero() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto">
-            <a href="#contact" className="px-7 md:px-8 py-4 bg-cyber-neon text-white font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon hover:shadow-none text-center">
+            <button
+              onClick={() => openModal()}
+              className="px-7 md:px-8 py-4 bg-cyber-neon text-white font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon hover:shadow-none text-center"
+            >
               Получить консультацию
-            </a>
+            </button>
             <a href="#workflow" className="px-7 md:px-8 py-4 border border-white/20 text-white font-sub font-bold tracking-wider uppercase text-xs md:text-sm hover:border-cyber-cyan hover:text-cyber-cyan transition-all duration-300 flex items-center justify-center bg-cyber-dark/50 backdrop-blur-sm">
               Как я работаю
             </a>
@@ -359,7 +393,71 @@ function Hero() {
   );
 }
 
-function Services() {
+const statsData = [
+  { value: '8+', label: 'Сайтов запущено' },
+  { value: '48 ч', label: 'Минимальный срок' },
+  { value: '100%', label: 'Проектов в срок' },
+  { value: '50/50', label: 'Схема оплаты' },
+];
+
+function Stats() {
+  return (
+    <section className="stats-row border-y border-white/5 bg-[#070613]">
+      <div className="container mx-auto px-6">
+        <div className="stats-row__grid">
+          {statsData.map(({ value, label }, i) => (
+            <motion.div
+              key={label}
+              className="stats-row__item"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+            >
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PricingPromoStrip({ tier, openModal }) {
+  const { active, activate } = usePromoTimer();
+  const discounted = tier.rawPrice - PROMO_DISCOUNT;
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (!active) activate();
+    openModal(tier.title, tier.price, tier.rawPrice);
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`pricing-thread__promo ${active ? 'pricing-thread__promo--active' : ''}`}
+    >
+      <Zap className="w-3.5 h-3.5 flex-shrink-0" />
+      {active ? (
+        <>
+          <span className="pricing-thread__promo-old">от {formatPrice(tier.rawPrice)}</span>
+          <strong>от {formatPrice(discounted)}</strong>
+          <span className="pricing-thread__promo-tag">NEON-15</span>
+        </>
+      ) : (
+        <>
+          <span>Промокод NEON-15</span>
+          <strong>−15 000 ₽</strong>
+          <span className="pricing-thread__promo-hint">активировать →</span>
+        </>
+      )}
+    </button>
+  );
+}
+
+function Services({ openModal }) {
   return (
     <section id="services" className="pricing-lab py-24 md:py-32 relative border-t border-white/5 bg-[#070613] overflow-hidden">
       <div className="pricing-noise absolute inset-0 pointer-events-none opacity-70" />
@@ -444,16 +542,15 @@ function Services() {
                       <small>Срок</small>
                       <b>{tier.timeline}</b>
                     </div>
-                    <a
-                      href="#contact"
+                    <button
+                      onClick={() => openModal(tier.title, tier.price, tier.rawPrice)}
                       className={`pricing-thread__cta ${accent.text}`}
-                      data-open-modal
-                      data-plan={tier.title}
-                      data-price={tier.price}
                     >
                       Обсудить <ArrowRight className="w-4 h-4" />
-                    </a>
+                    </button>
                   </div>
+
+                  <PricingPromoStrip tier={tier} openModal={openModal} />
                 </div>
                 <div className="pricing-thread__result">
                   <span>Итог</span>
@@ -473,7 +570,7 @@ function Services() {
   );
 }
 
-function Portfolio() {
+function Portfolio({ openModal }) {
   const [active, setActive] = useState(null);
 
   return (
@@ -522,23 +619,24 @@ function Portfolio() {
         </div>
 
         <div className="mt-20 text-center">
-          <button onClick={() => scrollToId('workflow')} className="px-12 py-5 border border-white/10 bg-white/5 backdrop-blur text-white font-header font-bold uppercase tracking-widest hover:bg-cyber-neon hover:border-cyber-neon transition-all duration-300">
+          <button
+            onClick={() => openModal()}
+            className="px-12 py-5 border border-white/10 bg-white/5 backdrop-blur text-white font-header font-bold uppercase tracking-widest hover:bg-cyber-neon hover:border-cyber-neon transition-all duration-300"
+          >
             Хочу такой сайт
           </button>
         </div>
       </div>
-      <ProjectModal project={active} onClose={() => setActive(null)} />
+      <ProjectModal project={active} onClose={() => setActive(null)} openModal={openModal} />
     </section>
   );
 }
 
-function ProjectModal({ project, onClose }) {
+function ProjectModal({ project, onClose, openModal }) {
   useEffect(() => {
     if (!project) return undefined;
     document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    return () => { document.body.style.overflow = 'unset'; };
   }, [project]);
 
   return (
@@ -588,10 +686,7 @@ function ProjectModal({ project, onClose }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  onClick={() => {
-                    onClose();
-                    setTimeout(() => scrollToId('contact'), 100);
-                  }}
+                  onClick={() => { onClose(); setTimeout(() => openModal(), 100); }}
                   className="w-full py-4 bg-white text-cyber-bg font-header font-bold uppercase tracking-widest hover:bg-cyber-neon hover:text-white transition-colors flex items-center justify-center gap-2"
                 >
                   Обсудить проект <ArrowRight className="w-5 h-5" />
@@ -644,7 +739,60 @@ function ProjectText({ number, title, color, text }) {
   );
 }
 
-function Workflow() {
+const accentColors = {
+  cyan: { bg: 'bg-cyber-cyan/10', border: 'border-cyber-cyan/30', text: 'text-cyber-cyan', avatar: 'bg-cyber-cyan text-[#070613]' },
+  violet: { bg: 'bg-cyber-neon/10', border: 'border-cyber-neon/30', text: 'text-cyber-neon', avatar: 'bg-cyber-neon text-white' },
+  pink: { bg: 'bg-cyber-pink/10', border: 'border-cyber-pink/30', text: 'text-cyber-pink', avatar: 'bg-cyber-pink text-white' },
+};
+
+function Testimonials() {
+  return (
+    <section id="testimonials" className="py-24 bg-[#05050e] border-t border-white/5 relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-cyber-neon/5 filter blur-[100px] pointer-events-none" />
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="mb-16 text-center max-w-2xl mx-auto">
+          <span className="text-cyber-neon font-sub text-sm tracking-[0.3em] uppercase font-bold">Отзывы</span>
+          <h2 className="font-header font-black text-4xl md:text-6xl text-white uppercase mt-2">
+            ЧТО <span className="text-cyber-neon">ГОВОРЯТ</span> КЛИЕНТЫ
+          </h2>
+          <p className="mt-4 text-gray-400 font-light">Реальные отзывы от людей, которые уже запустили сайт.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {testimonials.map((t, i) => {
+            const colors = accentColors[t.accent];
+            return (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
+                className={`tcard border ${colors.border} ${colors.bg}`}
+              >
+                <div className="tcard__stars">
+                  {Array.from({ length: t.rating }).map((_, idx) => (
+                    <Star key={idx} className={`w-4 h-4 fill-current ${colors.text}`} />
+                  ))}
+                </div>
+                <p className="tcard__quote">"{t.text}"</p>
+                <div className="tcard__author">
+                  <div className={`tcard__avatar ${colors.avatar}`}>{t.initial}</div>
+                  <div>
+                    <strong>{t.name}</strong>
+                    <span>{t.role}</span>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Workflow({ openModal }) {
   const icons = [MessageCircle, Zap, Rocket];
 
   return (
@@ -677,7 +825,7 @@ function Workflow() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-white/10 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-white/10 rounded-lg overflow-hidden mb-12">
           <div className="bg-[#1a1a2e] p-10 md:p-16 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-red-500/50" />
             <h3 className="font-header font-bold text-2xl text-gray-400 mb-6 flex items-center gap-3">
@@ -700,6 +848,15 @@ function Workflow() {
               <li className="flex items-start gap-3 text-white"><span className="text-cyber-cyan">✔</span><span>Прямая связь с разработчиком.</span></li>
             </ul>
           </div>
+        </div>
+
+        <div className="text-center">
+          <button
+            onClick={() => openModal()}
+            className="px-12 py-5 bg-cyber-neon text-white font-header font-bold uppercase tracking-widest hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon"
+          >
+            Начать проект
+          </button>
         </div>
       </div>
     </section>
@@ -742,11 +899,11 @@ function Terms() {
 
 function TermCard({ icon: Icon, color, title, children }) {
   return (
-    <div className={`group bg-cyber-dark/40 p-8 border border-white/5 hover:border-white/20 transition-all duration-300 relative overflow-hidden`}>
+    <div className="group bg-cyber-dark/40 p-8 border border-white/5 hover:border-white/20 transition-all duration-300 relative overflow-hidden">
       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
         <Icon className={`w-24 h-24 ${color}`} />
       </div>
-      <div className={`w-12 h-12 bg-white/5 border border-white/10 flex items-center justify-center rounded-sm mb-6`}>
+      <div className="w-12 h-12 bg-white/5 border border-white/10 flex items-center justify-center rounded-sm mb-6">
         <Icon className={`${color} w-6 h-6`} />
       </div>
       <h3 className={`font-header font-bold text-xl text-white mb-4 uppercase tracking-wide ${color}`}>{title}</h3>
@@ -755,7 +912,55 @@ function TermCard({ icon: Icon, color, title, children }) {
   );
 }
 
-function Footer() {
+function FAQ() {
+  const [openIndex, setOpenIndex] = useState(null);
+
+  return (
+    <section id="faq" className="py-24 bg-[#070613] border-t border-white/5 relative overflow-hidden">
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-cyber-cyan/5 filter blur-[120px] pointer-events-none" />
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="mb-16 max-w-2xl">
+          <span className="text-cyber-cyan font-sub text-sm tracking-[0.3em] uppercase font-bold">FAQ</span>
+          <h2 className="font-header font-black text-4xl md:text-6xl text-white mt-2 uppercase leading-tight">
+            ЧАСТЫЕ <span className="text-cyber-cyan">ВОПРОСЫ</span>
+          </h2>
+          <p className="mt-4 text-gray-400 font-light">Ответы на то, что спрашивают чаще всего перед стартом.</p>
+        </div>
+
+        <div className="faq-accordion max-w-3xl">
+          {faqItems.map((item, i) => (
+            <div key={i} className={`faq-item ${openIndex === i ? 'faq-item--open' : ''}`}>
+              <button
+                className="faq-item__btn"
+                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                aria-expanded={openIndex === i}
+              >
+                <span>{item.q}</span>
+                <ChevronDown className={`faq-item__chevron w-5 h-5 flex-shrink-0 transition-transform duration-300 ${openIndex === i ? 'rotate-180' : ''}`} />
+              </button>
+              <AnimatePresence initial={false}>
+                {openIndex === i && (
+                  <motion.div
+                    key="answer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <p className="faq-item__answer">{item.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer({ openModal }) {
   return (
     <footer id="contact" className="py-24 bg-cyber-dark border-t border-white/5 relative overflow-hidden">
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-64 bg-cyber-neon opacity-5 filter blur-[150px] pointer-events-none" />
@@ -766,12 +971,21 @@ function Footer() {
             ГОТОВЫ <span className="text-outline-white hover:text-cyber-neon transition-colors duration-300 cursor-default">НАЧАТЬ?</span>
           </h2>
           <p className="font-body text-cyber-text font-light max-w-xl mb-10">
-            Пишите в Telegram. Обсудим задачу, и я приступлю к работе уже сегодня. Без брифов на 10 страниц и бюрократии.
+            Оставьте заявку через форму — или напишите напрямую в Telegram. Без брифов на 10 страниц и бюрократии.
           </p>
-          <a href="https://t.me/Rambajo" target="_blank" rel="noopener noreferrer" className="group relative inline-flex items-center gap-4 px-10 py-5 bg-[#229ED9] hover:bg-[#1e8bbd] text-white overflow-hidden transition-all duration-300 shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.6)] rounded-sm">
-            <MessageCircle className="w-5 h-5 relative z-10 -ml-1" />
-            <span className="font-header font-bold tracking-widest text-lg uppercase relative z-10">Telegram</span>
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <button
+              onClick={() => openModal()}
+              className="group relative inline-flex items-center gap-4 px-10 py-5 bg-cyber-neon hover:bg-white text-white hover:text-cyber-bg overflow-hidden transition-all duration-300 shadow-neon hover:shadow-none"
+            >
+              <Send className="w-5 h-5 relative z-10" />
+              <span className="font-header font-bold tracking-widest text-lg uppercase relative z-10">Оставить заявку</span>
+            </button>
+            <a href="https://t.me/Rambajo" target="_blank" rel="noopener noreferrer" className="group relative inline-flex items-center gap-4 px-10 py-5 bg-[#229ED9] hover:bg-[#1e8bbd] text-white overflow-hidden transition-all duration-300 shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.6)] rounded-sm">
+              <MessageCircle className="w-5 h-5 relative z-10" />
+              <span className="font-header font-bold tracking-widest text-lg uppercase relative z-10">Telegram</span>
+            </a>
+          </div>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-white/10">
           <span className="font-header font-bold text-2xl text-white">NEON<span className="text-cyber-neon">DEV</span></span>
@@ -779,6 +993,209 @@ function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+function ModalSuccess({ plan, onClose }) {
+  return (
+    <div className="contact-modal__success">
+      <div className="contact-modal__success-icon">
+        <CheckCircle2 className="w-10 h-10 text-cyber-cyan" />
+      </div>
+      <h3 className="font-header font-black text-2xl md:text-3xl text-white uppercase">Заявка отправлена!</h3>
+      <p className="text-gray-400 font-light text-center max-w-sm leading-relaxed">
+        Увижу её в ближайшее время и напишу вам{plan ? ` по тарифу "${plan}"` : ''}. Обычно отвечаю в течение нескольких часов.
+      </p>
+      <a
+        href="https://t.me/Rambajo"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-3 px-8 py-4 bg-[#229ED9] text-white font-header font-bold uppercase tracking-wider hover:bg-[#1e8bbd] transition-colors"
+      >
+        <MessageCircle className="w-5 h-5" />
+        Написать в Telegram
+      </a>
+      <button onClick={onClose} className="text-gray-500 hover:text-white text-sm transition-colors mt-2">
+        Закрыть
+      </button>
+    </div>
+  );
+}
+
+function ContactModal({ data, onClose }) {
+  const [fields, setFields] = useState({ name: '', contact: '', message: '' });
+  const [status, setStatus] = useState('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+  const { active: promoActive, remaining } = usePromoTimer();
+
+  useEffect(() => {
+    if (!data) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [data]);
+
+  useEffect(() => {
+    if (!data) return undefined;
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [data, onClose]);
+
+  useEffect(() => {
+    if (!data) return;
+    setFields({ name: '', contact: '', message: '' });
+    setStatus('idle');
+    setErrorMsg('');
+  }, [data]);
+
+  const update = (key) => (e) => setFields((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (status === 'sending') return;
+    setStatus('sending');
+    setErrorMsg('');
+
+    const fd = new FormData();
+    fd.append('name', fields.name);
+    fd.append('contact', fields.contact);
+    const msgWithPromo = fields.message + (promoActive ? '\n[Промокод NEON-15 активирован]' : '');
+    fd.append('message', msgWithPromo);
+    fd.append('plan', data?.plan || 'Не указан');
+    fd.append('price',
+      promoActive && data?.rawPrice
+        ? `от ${formatPrice(data.rawPrice - PROMO_DISCOUNT)} (промокод NEON-15)`
+        : (data?.price || '')
+    );
+    fd.append('personal_data_agree', 'yes');
+    fd.append('privacy_read', 'yes');
+
+    try {
+      const res = await fetch('/contact.php', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (json.ok) {
+        setStatus('success');
+      } else {
+        setStatus('error');
+        setErrorMsg(json.message || 'Ошибка при отправке.');
+      }
+    } catch {
+      setStatus('error');
+      setErrorMsg('Сервер недоступен. Напишите напрямую в Telegram @Rambajo.');
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {data && (
+        <motion.div
+          className="fixed inset-0 z-[200] overflow-y-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+          <div className="relative min-h-full flex items-center justify-center p-4 py-10">
+            <motion.div
+              className="contact-modal relative w-full max-w-xl"
+              initial={{ scale: 0.95, y: 24 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 24 }}
+              transition={{ duration: 0.25 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-cyber-neon hover:border-cyber-neon text-white transition-all"
+                aria-label="Закрыть"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {status === 'success' ? (
+                <ModalSuccess plan={data?.plan} onClose={onClose} />
+              ) : (
+                <>
+                  <div className="contact-modal__header">
+                    <h2>Обсудить проект</h2>
+                    {data?.plan && (
+                      <p className="contact-modal__plan">
+                        Тариф: <span>{data.plan}</span>
+                        {data?.price && <b>{data.price}</b>}
+                      </p>
+                    )}
+                  </div>
+
+                  <PromoInModal rawPrice={data?.rawPrice} />
+
+                  <form onSubmit={handleSubmit} className="contact-modal__form">
+                    <div className="contact-modal__field">
+                      <label htmlFor="cm-name">Имя *</label>
+                      <input
+                        id="cm-name"
+                        type="text"
+                        value={fields.name}
+                        onChange={update('name')}
+                        placeholder="Как вас зовут?"
+                        required
+                        maxLength={120}
+                        autoComplete="name"
+                      />
+                    </div>
+                    <div className="contact-modal__field">
+                      <label htmlFor="cm-contact">Telegram или телефон *</label>
+                      <input
+                        id="cm-contact"
+                        type="text"
+                        value={fields.contact}
+                        onChange={update('contact')}
+                        placeholder="@username или +7..."
+                        required
+                        maxLength={180}
+                      />
+                    </div>
+                    <div className="contact-modal__field">
+                      <label htmlFor="cm-message">О задаче *</label>
+                      <textarea
+                        id="cm-message"
+                        value={fields.message}
+                        onChange={update('message')}
+                        placeholder="Что нужно сделать? Сфера бизнеса, пожелания, примеры..."
+                        required
+                        maxLength={3000}
+                        rows={4}
+                      />
+                    </div>
+
+                    {status === 'error' && (
+                      <p className="contact-modal__error">{errorMsg}</p>
+                    )}
+
+                    <button
+                      type="submit"
+                      className="contact-modal__submit"
+                      disabled={status === 'sending'}
+                    >
+                      {status === 'sending' ? (
+                        <><Loader2 className="w-5 h-5 animate-spin" /> Отправляю...</>
+                      ) : (
+                        <><Send className="w-5 h-5" /> Отправить заявку</>
+                      )}
+                    </button>
+
+                    <p className="contact-modal__legal">
+                      Нажимая «Отправить», вы соглашаетесь с{' '}
+                      <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Политикой конфиденциальности</a>.
+                    </p>
+                  </form>
+                </>
+              )}
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -811,17 +1228,25 @@ function BackToTop() {
 }
 
 export default function App() {
+  const [modalData, setModalData] = useState(null);
+  const openModal = (plan = '', price = '', rawPrice = null) => setModalData({ plan, price, rawPrice });
+  const closeModal = () => setModalData(null);
+
   return (
     <main className="relative min-h-screen text-white selection:bg-cyber-neon selection:text-white font-body">
-      <Header />
-      <Hero />
-      <Services />
-      <Portfolio />
-      <Workflow />
+      <Header openModal={openModal} />
+      <Hero openModal={openModal} />
+      <Stats />
+      <Services openModal={openModal} />
+      <Portfolio openModal={openModal} />
+      <Testimonials />
+      <Workflow openModal={openModal} />
       <Terms />
-      <Footer />
+      <FAQ />
+      <Footer openModal={openModal} />
       <FloatingPromo />
       <BackToTop />
+      <ContactModal data={modalData} onClose={closeModal} />
     </main>
   );
 }
