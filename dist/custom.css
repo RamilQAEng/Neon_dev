@@ -213,7 +213,7 @@
   margin: 0 0 14px;
   color: #fff;
   font-family: Montserrat, sans-serif;
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -757,7 +757,7 @@
 }
 
 .floating-discuss:hover {
-  transform: translateY(-3px);
+  transform: translateY(-6px);
   border-color: rgba(167, 255, 63, 0.32);
   box-shadow: 0 22px 54px rgba(0, 0, 0, 0.42), 0 0 28px rgba(167, 255, 63, 0.16);
 }
@@ -811,23 +811,30 @@ html.modal-open body {
 
 .quick-modal__close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 16px;
   z-index: 2;
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
   color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-  font-size: 28px;
+  background: transparent;
+  font-size: 32px;
+  font-family: Inter, sans-serif;
+  font-weight: 300;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  opacity: 0.82;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .quick-modal__close:hover {
-  color: #0A091A;
-  background: #00FFD1;
+  color: #00FFD1;
+  opacity: 1;
+  transform: translateY(-6px) rotate(90deg);
 }
 
 .quick-modal__terminal {
@@ -1037,8 +1044,11 @@ html.modal-open body {
   }
 
   .quick-modal__close {
-    top: 9px;
-    right: 9px;
+    top: 10px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 30px;
   }
 
   .quick-modal__form input:not([type="checkbox"]):not([type="hidden"]),

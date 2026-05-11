@@ -45,6 +45,12 @@
     if (legacyFooter) legacyFooter.remove();
   }
 
+  function trackGoal(goal, payload) {
+    if (typeof window.ym === 'function') {
+      window.ym(109145693, 'reachGoal', goal, payload);
+    }
+  }
+
   function watchLegacyFooter() {
     const observer = new MutationObserver(() => removeLegacyFooter());
     observer.observe(document.body, { childList: true, subtree: true });
@@ -54,17 +60,22 @@
   async function sendLeadForm(form) {
     const status = form.querySelector('.form-status');
     const submit = form.querySelector('button[type="submit"]');
+    const formData = new FormData(form);
     status.textContent = 'Отправляю...';
     submit.disabled = true;
 
     try {
       const response = await fetch(form.action, {
         method: 'POST',
-        body: new FormData(form),
+        body: formData,
         headers: { Accept: 'application/json' }
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) throw new Error(data.message || 'Не удалось отправить заявку.');
+      trackGoal('lead_sent', {
+        plan: formData.get('plan') || 'Тариф по задаче',
+        price: formData.get('price') || 'Тариф по задаче'
+      });
       form.reset();
       status.textContent = 'Заявка отправлена. Я свяжусь с вами в ближайшее время.';
       return true;
@@ -97,16 +108,17 @@
           <div class="quick-modal__copy">
             <div class="sales-contact__kicker">Быстрый контакт</div>
             <h2 id="quick-modal-title">Обсудить <span>проект</span></h2>
-            <p>Оставьте контакт. Я отвечу на почту/в мессенджер и быстро скажу, как лучше собрать сайт за фиксированные 45 000 ₽.</p>
+            <p>Оставьте контакт. Я отвечу на почту/в мессенджер и подскажу, какой тариф лучше подойдет под задачу.</p>
             <div class="quick-modal__price">
-              <span>Фикс</span>
+              <span>Старт от</span>
               <strong>45 000 ₽</strong>
             </div>
           </div>
           <form class="quick-modal__form" action="/contact.php" method="post">
             <input name="name" autocomplete="name" placeholder="Имя" required>
             <input name="contact" autocomplete="email tel" placeholder="Telegram, телефон или email" required>
-            <input type="hidden" name="price" value="45 000 ₽">
+            <input type="hidden" name="price" value="Тариф по задаче">
+            <input type="hidden" name="plan" value="Тариф по задаче">
             <input type="hidden" name="consent_version" value="consent-2026-05-11">
             <input type="hidden" name="privacy_version" value="privacy-2026-05-11">
             <textarea name="message" placeholder="Коротко: что нужно сделать?" required></textarea>
@@ -145,12 +157,35 @@
   function openQuickModal(opener) {
     buildQuickModal();
     const modal = document.querySelector('.quick-modal');
+    const trigger = opener?.currentTarget || opener;
     if (opener?.currentTarget) {
       quickModalOpener = opener.currentTarget;
     } else if (opener instanceof HTMLElement) {
       quickModalOpener = opener;
     } else if (document.activeElement instanceof HTMLElement && !document.activeElement.closest('.quick-modal')) {
       quickModalOpener = document.activeElement;
+    }
+
+    const price = trigger?.dataset?.price || '45 000 ₽';
+    const plan = trigger?.dataset?.plan || 'Тариф по задаче';
+    const priceLabel = trigger?.dataset?.price ? plan : 'Старт от';
+    const priceCaption = modal.querySelector('.quick-modal__price span');
+    const priceValue = modal.querySelector('.quick-modal__price strong');
+    const priceField = modal.querySelector('input[name="price"]');
+    const planField = modal.querySelector('input[name="plan"]');
+    const messageField = modal.querySelector('textarea[name="message"]');
+
+    if (priceCaption) priceCaption.textContent = priceLabel;
+    if (priceValue) priceValue.textContent = price;
+    if (priceField) priceField.value = price;
+    if (planField) planField.value = plan;
+    if (messageField && trigger?.dataset?.price) {
+      messageField.placeholder = `Коротко: что нужно сделать? Выбран тариф: ${plan}`;
+    } else if (messageField) {
+      messageField.placeholder = 'Коротко: что нужно сделать?';
+    }
+    if (trigger?.dataset?.price) {
+      trackGoal('tariff_click', { plan, price });
     }
 
     modal.inert = false;
@@ -269,14 +304,15 @@
           </div>
           <h3>Форма связи</h3>
           <div class="fixed-price">
-            <span>Фиксированная стоимость</span>
+            <span>Тарифы от</span>
             <strong>45 000 ₽</strong>
           </div>
-          <p>Один понятный пакет без размытых вилок. Опишите задачу, а я отвечу с планом запуска и ближайшими шагами.</p>
+          <p>Три понятных формата без размытых вилок. Опишите задачу, а я отвечу с подходящим тарифом и ближайшими шагами.</p>
           <div class="form-grid">
             <input name="name" autocomplete="name" placeholder="Ваше имя" required>
             <input name="contact" autocomplete="email tel" placeholder="Телефон, Telegram или email" required>
-            <input type="hidden" name="price" value="45 000 ₽">
+            <input type="hidden" name="price" value="Тариф по задаче">
+            <input type="hidden" name="plan" value="Тариф по задаче">
             <input type="hidden" name="consent_version" value="consent-2026-05-11">
             <input type="hidden" name="privacy_version" value="privacy-2026-05-11">
             <textarea name="message" placeholder="Что нужно сделать?" required></textarea>
