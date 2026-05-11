@@ -364,6 +364,33 @@
   line-height: 1.7;
 }
 
+.sales-contact__price {
+  display: inline-grid;
+  gap: 6px;
+  margin: 0 0 22px;
+  padding: 16px 20px;
+  background: rgba(0, 255, 209, 0.07);
+  border: 1px solid rgba(0, 255, 209, 0.24);
+  box-shadow: 0 0 22px rgba(0, 255, 209, 0.08);
+}
+
+.sales-contact__price span,
+.sales-contact__price small {
+  color: rgba(224, 224, 224, 0.62);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sales-contact__price strong {
+  color: #00FFD1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(0, 255, 209, 0.45);
+}
+
 .sales-contact__form,
 .legal-page__panel,
 .cookie-banner {
@@ -431,41 +458,12 @@
   line-height: 1.6;
 }
 
-.fixed-price {
-  margin: 0 0 18px;
-  padding: 18px;
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  align-items: center;
-  background: linear-gradient(90deg, rgba(157, 111, 255, 0.16), rgba(0, 255, 209, 0.08));
-  border: 1px solid rgba(157, 111, 255, 0.35);
-}
-
-.fixed-price span {
-  color: rgba(224, 224, 224, 0.68);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.fixed-price strong {
-  color: #fff;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: clamp(24px, 5vw, 36px);
-  line-height: 1;
-  text-shadow: 0 0 18px rgba(157, 111, 255, 0.55);
-  white-space: nowrap;
-}
-
 .form-grid {
   display: grid;
   gap: 14px;
 }
 
 .form-grid input:not([type="checkbox"]):not([type="hidden"]),
-.form-grid textarea,
 .form-grid select {
   width: 100%;
   box-sizing: border-box;
@@ -480,13 +478,7 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-grid textarea {
-  min-height: 130px;
-  resize: vertical;
-}
-
 .form-grid input:not([type="checkbox"]):not([type="hidden"]):focus,
-.form-grid textarea:focus,
 .form-grid select:focus {
   border-color: #00FFD1;
   box-shadow: 0 0 0 3px rgba(0, 255, 209, 0.1);
@@ -911,8 +903,7 @@ html.modal-open body {
   gap: 12px;
 }
 
-.quick-modal__form input:not([type="checkbox"]):not([type="hidden"]),
-.quick-modal__form textarea {
+.quick-modal__form input:not([type="checkbox"]):not([type="hidden"]) {
   width: 100%;
   box-sizing: border-box;
   padding: 15px 16px;
@@ -924,13 +915,7 @@ html.modal-open body {
   font-size: 14px;
 }
 
-.quick-modal__form textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.quick-modal__form input:not([type="checkbox"]):not([type="hidden"]):focus,
-.quick-modal__form textarea:focus {
+.quick-modal__form input:not([type="checkbox"]):not([type="hidden"]):focus {
   border-color: #00FFD1;
   box-shadow: 0 0 0 3px rgba(0, 255, 209, 0.09);
 }
@@ -1052,9 +1037,7 @@ html.modal-open body {
   }
 
   .quick-modal__form input:not([type="checkbox"]):not([type="hidden"]),
-  .quick-modal__form textarea,
   .form-grid input:not([type="checkbox"]):not([type="hidden"]),
-  .form-grid textarea,
   .form-grid select {
     font-size: 16px;
   }
@@ -1114,11 +1097,6 @@ html.modal-open body {
 
   .sales-contact__form-top {
     margin: -24px -24px 24px;
-  }
-
-  .fixed-price {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .neo-footer__grid,
