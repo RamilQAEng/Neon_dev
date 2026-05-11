@@ -28,7 +28,7 @@ import { faqItems, portfolio, pricingTiers, testimonials, workflow } from './dat
 
 const navItems = [
   ['Тарифы', '#services'],
-  ['Портфолио', '#portfolio'],
+  ['Кейсы', '#portfolio'],
   ['Процесс', '#workflow'],
   ['Условия', '#terms'],
   ['Контакт', '#contact']
