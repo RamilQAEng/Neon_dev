@@ -59,8 +59,167 @@ const tierAccent = {
   }
 };
 
+const PROMO_DURATION_MS = 5 * 60 * 1000;
+const PROMO_STORAGE_KEY = 'neonPromoExpiresAt';
+const PROMO_EVENT = 'neon-promo-activated';
+
 function scrollToId(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function formatPromoTime(ms) {
+  const safeMs = Math.max(0, ms);
+  const minutes = Math.floor(safeMs / 60000);
+  const seconds = Math.floor((safeMs % 60000) / 1000);
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function activatePromoCode() {
+  const nextExpiresAt = Date.now() + PROMO_DURATION_MS;
+  window.localStorage.setItem(PROMO_STORAGE_KEY, String(nextExpiresAt));
+  window.dispatchEvent(new CustomEvent(PROMO_EVENT, { detail: { expiresAt: nextExpiresAt } }));
+  return nextExpiresAt;
+}
+
+function PromoAnchor() {
+  const [expiresAt, setExpiresAt] = useState(null);
+  const [remaining, setRemaining] = useState(PROMO_DURATION_MS);
+
+  useEffect(() => {
+    const stored = Number(window.localStorage.getItem(PROMO_STORAGE_KEY));
+    if (stored > Date.now()) {
+      setExpiresAt(stored);
+      setRemaining(stored - Date.now());
+    }
+
+    const onPromoActivated = (event) => {
+      const nextExpiresAt = event.detail?.expiresAt;
+      if (nextExpiresAt) {
+        setExpiresAt(nextExpiresAt);
+        setRemaining(nextExpiresAt - Date.now());
+      }
+    };
+
+    window.addEventListener(PROMO_EVENT, onPromoActivated);
+    return () => window.removeEventListener(PROMO_EVENT, onPromoActivated);
+  }, []);
+
+  useEffect(() => {
+    if (!expiresAt) return undefined;
+
+    const tick = () => {
+      const nextRemaining = expiresAt - Date.now();
+      if (nextRemaining <= 0) {
+        window.localStorage.removeItem(PROMO_STORAGE_KEY);
+        setExpiresAt(null);
+        setRemaining(PROMO_DURATION_MS);
+        return;
+      }
+      setRemaining(nextRemaining);
+    };
+
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [expiresAt]);
+
+  const active = Boolean(expiresAt);
+
+  const activatePromo = () => {
+    const nextExpiresAt = activatePromoCode();
+    setExpiresAt(nextExpiresAt);
+    setRemaining(PROMO_DURATION_MS);
+  };
+
+  return (
+    <motion.aside
+      initial={{ opacity: 0, y: 18, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.7, delay: 0.75 }}
+      className="promo-anchor"
+    >
+      <div className="promo-anchor__top">
+        <div className="promo-anchor__icon">
+          <Zap className="w-5 h-5" />
+        </div>
+        <div>
+          <span>Промокод</span>
+          <strong>NEON-15</strong>
+        </div>
+      </div>
+      <div className="promo-anchor__value">
+        <span>-15 000 ₽</span>
+        <small>на запуск сайта под ключ</small>
+      </div>
+      <div className="promo-anchor__timer">
+        <Timer className="w-4 h-4" />
+        <span>{active ? 'бронь активна' : 'активация на 5 минут'}</span>
+        <b>{formatPromoTime(remaining)}</b>
+      </div>
+      <a
+        href="#contact"
+        onClick={activatePromo}
+        data-plan="Промокод NEON-15"
+        data-price="скидка 15 000 ₽"
+        className="promo-anchor__cta"
+      >
+        {active ? 'Забрать скидку' : 'Активировать'}
+        <ArrowRight className="w-4 h-4" />
+      </a>
+    </motion.aside>
+  );
+}
+
+function FloatingPromo() {
+  const [visible, setVisible] = useState(false);
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.pageYOffset > 520);
+    const stored = Number(window.localStorage.getItem(PROMO_STORAGE_KEY));
+    setActive(stored > Date.now());
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+
+    const onPromoActivated = () => setActive(true);
+    window.addEventListener(PROMO_EVENT, onPromoActivated);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener(PROMO_EVENT, onPromoActivated);
+    };
+  }, []);
+
+  const handleClick = () => {
+    activatePromoCode();
+    setActive(true);
+  };
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.a
+          href="#contact"
+          onClick={handleClick}
+          initial={{ opacity: 0, x: 18, scale: 0.88 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 18, scale: 0.88 }}
+          className={`floating-promo ${active ? 'floating-promo--active' : ''}`}
+          data-plan="Промокод NEON-15"
+          data-price="скидка 15 000 ₽"
+          aria-label="Активировать промокод NEON-15 на скидку 15 000 рублей"
+        >
+          <span className="floating-promo__icon">
+            <Zap className="w-4 h-4" />
+          </span>
+          <span className="floating-promo__copy">
+            <b>{active ? 'NEON-15' : '-15K'}</b>
+            <small>{active ? 'активен' : 'промо'}</small>
+          </span>
+        </motion.a>
+      )}
+    </AnimatePresence>
+  );
 }
 
 function Header() {
@@ -82,8 +241,8 @@ function Header() {
             <Zap className="text-cyber-neon w-6 h-6" />
           </div>
           <div className="flex flex-col text-left">
-            <span className="font-header font-black text-xl leading-none tracking-wide text-white">CYBER</span>
-            <span className="font-sub text-xs font-bold tracking-[0.2em] text-cyber-cyan mt-1">PORTFOLIO</span>
+            <span className="font-header font-black text-xl leading-none tracking-wide text-white">NEON</span>
+            <span className="font-sub text-xs font-bold tracking-[0.2em] text-cyber-cyan mt-1">DESIGN</span>
           </div>
         </button>
 
@@ -139,18 +298,8 @@ function Hero() {
         NEON
       </div>
       <div className="absolute bottom-16 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyber-cyan/35 to-transparent" />
-      <div className="absolute top-1/2 right-10 hidden xl:block w-80 border border-white/10 bg-cyber-dark/25 backdrop-blur-sm p-5 text-xs font-sub text-cyber-cyan/70 shadow-[0_0_40px_rgba(0,255,209,0.08)]">
-        <div className="flex items-center gap-2 pb-3 border-b border-white/10">
-          <span className="w-2 h-2 bg-cyber-pink" />
-          <span className="w-2 h-2 bg-cyber-neon" />
-          <span className="w-2 h-2 bg-cyber-cyan" />
-          <span className="ml-auto tracking-[0.25em] uppercase text-white/35">build.live</span>
-        </div>
-        <div className="pt-4 space-y-2 tracking-[0.18em] uppercase">
-          <div>deploy: clean</div>
-          <div className="text-white/35">speed: 98/100</div>
-          <div>ui: neon-ready</div>
-        </div>
+      <div className="absolute top-[38%] right-10 hidden xl:block w-[360px]">
+        <PromoAnchor />
       </div>
       <div className="container mx-auto px-6 relative z-10">
         <div className="absolute top-0 left-6 w-[1px] h-32 bg-gradient-to-b from-cyber-neon to-transparent opacity-50 hidden md:block" />
@@ -171,33 +320,41 @@ function Hero() {
               САЙТОВ ДЛЯ БИЗНЕСА
             </span>
           </motion.h1>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.45 }}
+            className="mt-8 inline-flex flex-wrap items-center gap-3 border border-cyber-cyan/35 bg-cyber-cyan/10 px-5 py-3 font-sub text-sm md:text-base font-bold uppercase tracking-[0.14em] text-white shadow-cyan"
+          >
+            <span className="text-cyber-cyan">от 45 000 ₽</span>
+            <span className="text-white/45">/</span>
+            <span>фикс, без скрытых доплат</span>
+          </motion.div>
           <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 0.8 }} className="absolute -bottom-6 left-0 w-2/3 md:w-1/2 h-2 bg-cyber-neon shadow-neon origin-left" />
         </div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1 }} className="flex flex-col md:flex-row justify-between items-start md:items-end mt-16 gap-10">
           <div className="max-w-xl">
             <h2 className="font-sub font-light text-2xl md:text-3xl text-white mb-6 tracking-wide">
-              САЙТЫ КОТОРЫЕ <span className="text-cyber-neon font-bold border-b border-cyber-neon">ПРОДАЮТ</span>
+              САЙТ ПОД КЛЮЧ <span className="text-cyber-neon font-bold border-b border-cyber-neon">ЗА 14 ДНЕЙ</span>
             </h2>
             <p className="font-body text-cyber-text text-lg font-light leading-relaxed border-l-4 border-cyber-dark pl-6">
-              Создаю быстрые и красивые сайты для компаний. От промо-страницы до многостраничника без конструкторов и лишней тяжести.
+              Чистый код, без конструкторов, с адаптивом, заявками и настройкой аналитики. Детали уточним в переписке, а на старте сразу понятно по срокам и бюджету.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto">
-            <a href="#workflow" className="px-10 py-5 bg-cyber-neon text-white font-header font-bold tracking-wider uppercase text-lg hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon hover:shadow-none text-center">
-              Как я работаю
+            <a href="#contact" className="px-7 md:px-8 py-4 bg-cyber-neon text-white font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon hover:shadow-none text-center">
+              Получить консультацию
             </a>
-            <a href="#contact" className="px-10 py-5 border border-white/20 text-white font-sub font-bold tracking-wider uppercase text-sm hover:border-cyber-cyan hover:text-cyber-cyan transition-all duration-300 flex items-center justify-center bg-cyber-dark/50 backdrop-blur-sm">
-              Написать мне
+            <a href="#workflow" className="px-7 md:px-8 py-4 border border-white/20 text-white font-sub font-bold tracking-wider uppercase text-xs md:text-sm hover:border-cyber-cyan hover:text-cyber-cyan transition-all duration-300 flex items-center justify-center bg-cyber-dark/50 backdrop-blur-sm">
+              Как я работаю
             </a>
           </div>
         </motion.div>
+        <div className="mt-8 xl:hidden">
+          <PromoAnchor />
+        </div>
       </div>
-
-      <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2, repeat: Infinity }} className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-3 opacity-70">
-        <span className="font-sub text-[10px] tracking-[0.3em] uppercase text-cyber-cyan">Вниз</span>
-        <ArrowRight className="w-5 h-5 text-cyber-cyan rotate-90" />
-      </motion.div>
     </section>
   );
 }
@@ -617,8 +774,8 @@ function Footer() {
           </a>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-white/10">
-          <span className="font-header font-bold text-2xl text-white">CYBER<span className="text-cyber-neon">.</span></span>
-          <span className="text-gray-500 font-sub text-xs tracking-wider">© 2026 CYBERPULSE. DIGITAL PRODUCTION.</span>
+          <span className="font-header font-bold text-2xl text-white">NEON<span className="text-cyber-neon">DEV</span></span>
+          <span className="text-gray-500 font-sub text-xs tracking-wider">© 2026 NEON DEV. DIGITAL PRODUCTION.</span>
         </div>
       </div>
     </footer>
@@ -663,6 +820,7 @@ export default function App() {
       <Workflow />
       <Terms />
       <Footer />
+      <FloatingPromo />
       <BackToTop />
     </main>
   );

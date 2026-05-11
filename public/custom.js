@@ -108,7 +108,7 @@
           <div class="quick-modal__copy">
             <div class="sales-contact__kicker">Быстрый контакт</div>
             <h2 id="quick-modal-title">Обсудить <span>проект</span></h2>
-            <p>Оставьте контакт. Я отвечу на почту/в мессенджер и подскажу, какой тариф лучше подойдет под задачу.</p>
+            <p>Оставьте имя и контакт. Детали задачи уточню в переписке, без длинной формы на старте.</p>
             <div class="quick-modal__price">
               <span>Старт от</span>
               <strong>45 000 ₽</strong>
@@ -119,18 +119,15 @@
             <input name="contact" autocomplete="email tel" placeholder="Telegram, телефон или email" required>
             <input type="hidden" name="price" value="Тариф по задаче">
             <input type="hidden" name="plan" value="Тариф по задаче">
+            <input type="hidden" name="message" value="Заявка без сообщения: уточнить задачу в переписке.">
             <input type="hidden" name="consent_version" value="consent-2026-05-11">
             <input type="hidden" name="privacy_version" value="privacy-2026-05-11">
-            <textarea name="message" placeholder="Коротко: что нужно сделать?" required></textarea>
+            <input type="hidden" name="privacy_read" value="yes">
             <label>
               <input type="checkbox" name="personal_data_agree" value="yes" required>
-              <span>Даю отдельное <a href="/consent.html" target="_blank">согласие на обработку персональных данных</a>.</span>
+              <span>Согласен на <a href="/consent.html" target="_blank">обработку персональных данных</a> и ознакомлен с <a href="/privacy.html" target="_blank">политикой конфиденциальности</a>.</span>
             </label>
-            <label>
-              <input type="checkbox" name="privacy_read" value="yes" required>
-              <span>Ознакомлен с <a href="/privacy.html" target="_blank">политикой конфиденциальности</a>.</span>
-            </label>
-            <button type="submit">Отправить</button>
+            <button type="submit">Получить консультацию</button>
             <div class="form-status" aria-live="polite"></div>
           </form>
         </div>
@@ -173,17 +170,11 @@
     const priceValue = modal.querySelector('.quick-modal__price strong');
     const priceField = modal.querySelector('input[name="price"]');
     const planField = modal.querySelector('input[name="plan"]');
-    const messageField = modal.querySelector('textarea[name="message"]');
 
     if (priceCaption) priceCaption.textContent = priceLabel;
     if (priceValue) priceValue.textContent = price;
     if (priceField) priceField.value = price;
     if (planField) planField.value = plan;
-    if (messageField && trigger?.dataset?.price) {
-      messageField.placeholder = `Коротко: что нужно сделать? Выбран тариф: ${plan}`;
-    } else if (messageField) {
-      messageField.placeholder = 'Коротко: что нужно сделать?';
-    }
     if (trigger?.dataset?.price) {
       trackGoal('tariff_click', { plan, price });
     }
@@ -289,8 +280,13 @@
       <div class="sales-contact__head">
         <div class="sales-contact__kicker">Связаться</div>
         <h2>ЗАПУСТИМ <span>ПРОЕКТ</span></h2>
+        <div class="sales-contact__price">
+          <span>Старт проекта</span>
+          <strong>от 45 000 ₽</strong>
+          <small>фиксируем формат и бюджет до начала работ</small>
+        </div>
         <p class="sales-contact__text">
-          Оставьте короткую заявку. Я посмотрю задачу, предложу формат сайта и отвечу по срокам без длинных брифов.
+          Оставьте имя и контакт. Я сам уточню детали в переписке и предложу подходящий формат сайта без длинных брифов.
         </p>
       </div>
 
@@ -303,28 +299,21 @@
             <span class="terminal-title">request.init</span>
           </div>
           <h3>Форма связи</h3>
-          <div class="fixed-price">
-            <span>Тарифы от</span>
-            <strong>45 000 ₽</strong>
-          </div>
-          <p>Три понятных формата без размытых вилок. Опишите задачу, а я отвечу с подходящим тарифом и ближайшими шагами.</p>
+          <p>Оставьте контакт. Я напишу сам, уточню задачу и предложу подходящий формат сайта.</p>
           <div class="form-grid">
             <input name="name" autocomplete="name" placeholder="Ваше имя" required>
             <input name="contact" autocomplete="email tel" placeholder="Телефон, Telegram или email" required>
             <input type="hidden" name="price" value="Тариф по задаче">
             <input type="hidden" name="plan" value="Тариф по задаче">
+            <input type="hidden" name="message" value="Заявка без сообщения: уточнить задачу в переписке.">
             <input type="hidden" name="consent_version" value="consent-2026-05-11">
             <input type="hidden" name="privacy_version" value="privacy-2026-05-11">
-            <textarea name="message" placeholder="Что нужно сделать?" required></textarea>
+            <input type="hidden" name="privacy_read" value="yes">
             <label>
               <input type="checkbox" name="personal_data_agree" value="yes" required>
-              <span>Даю отдельное <a href="/consent.html" target="_blank">согласие на обработку персональных данных</a>.</span>
+              <span>Согласен на <a href="/consent.html" target="_blank">обработку персональных данных</a> и ознакомлен с <a href="/privacy.html" target="_blank">политикой конфиденциальности</a>.</span>
             </label>
-            <label>
-              <input type="checkbox" name="privacy_read" value="yes" required>
-              <span>Ознакомлен с <a href="/privacy.html" target="_blank">политикой конфиденциальности</a>.</span>
-            </label>
-            <button type="submit">Отправить заявку</button>
+            <button type="submit">Получить консультацию</button>
             <div class="form-status" aria-live="polite"></div>
           </div>
         </form>
