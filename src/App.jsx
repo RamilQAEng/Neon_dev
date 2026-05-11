@@ -7,32 +7,56 @@ import {
   Code2,
   CreditCard,
   Eye,
+  FileText,
+  Layers3,
   Menu,
   MessageCircle,
-  Palette,
+  MonitorSmartphone,
   Rocket,
-  Shield,
   ShieldCheck,
   Timer,
   X,
   XCircle,
   Zap
 } from 'lucide-react';
-import { portfolio, services, workflow } from './data.js';
+import { portfolio, pricingTiers, workflow } from './data.js';
 
 const navItems = [
-  ['Услуги', '#services'],
+  ['Тарифы', '#services'],
   ['Портфолио', '#portfolio'],
   ['Процесс', '#workflow'],
   ['Условия', '#terms'],
   ['Контакт', '#contact']
 ];
 
-const serviceIcons = {
-  code: Code2,
-  design: Palette,
-  rocket: Rocket,
-  shield: Shield
+const tierIcons = {
+  start: MonitorSmartphone,
+  landing: Rocket,
+  business: Layers3
+};
+
+const tierAccent = {
+  cyan: {
+    line: 'from-cyber-cyan via-white/70 to-transparent',
+    text: 'text-cyber-cyan',
+    border: 'border-cyber-cyan/45',
+    bg: 'bg-cyber-cyan/10',
+    glow: 'shadow-[0_0_36px_rgba(0,255,209,0.14)]'
+  },
+  violet: {
+    line: 'from-cyber-neon via-white/70 to-transparent',
+    text: 'text-cyber-neon',
+    border: 'border-cyber-neon/50',
+    bg: 'bg-cyber-neon/10',
+    glow: 'shadow-[0_0_48px_rgba(157,111,255,0.22)]'
+  },
+  pink: {
+    line: 'from-cyber-pink via-white/70 to-transparent',
+    text: 'text-cyber-pink',
+    border: 'border-cyber-pink/45',
+    bg: 'bg-cyber-pink/10',
+    glow: 'shadow-[0_0_36px_rgba(255,112,184,0.14)]'
+  }
 };
 
 function scrollToId(id) {
@@ -156,7 +180,7 @@ function Hero() {
               САЙТЫ КОТОРЫЕ <span className="text-cyber-neon font-bold border-b border-cyber-neon">ПРОДАЮТ</span>
             </h2>
             <p className="font-body text-cyber-text text-lg font-light leading-relaxed border-l-4 border-cyber-dark pl-6">
-              Создаю быстрые и красивые сайты для компаний. Без конструкторов, без лишних сложностей. Только чистый код и результат.
+              Создаю быстрые и красивые сайты для компаний. От промо-страницы до многостраничника без конструкторов и лишней тяжести.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto">
@@ -180,43 +204,112 @@ function Hero() {
 
 function Services() {
   return (
-    <section id="services" className="py-24 relative border-t border-white/5 bg-[#080714]">
-      <div className="container mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+    <section id="services" className="pricing-lab py-24 md:py-32 relative border-t border-white/5 bg-[#070613] overflow-hidden">
+      <div className="pricing-noise absolute inset-0 pointer-events-none opacity-70" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyber-cyan/50 to-transparent" />
+      <div className="container mx-auto px-5 md:px-6 relative z-10">
+        <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-16 items-end mb-12 md:mb-16">
           <div>
-            <span className="text-cyber-neon font-sub text-sm tracking-[0.3em] uppercase font-bold">Предложение</span>
-            <h2 className="font-header font-black text-4xl md:text-6xl text-white mt-2 uppercase leading-tight">
-              ЧЕСТНАЯ <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan to-blue-500">ЦЕНА</span>
+            <span className="inline-flex items-center gap-3 text-cyber-cyan font-sub text-xs tracking-[0.28em] uppercase font-bold">
+              <span className="w-2 h-2 bg-cyber-cyan shadow-cyan" />
+              Тарифная сетка
+            </span>
+            <h2 className="font-header font-black text-4xl sm:text-5xl md:text-7xl text-white mt-4 uppercase leading-[0.92] tracking-normal">
+              ВЫБЕРИ <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-white to-cyber-pink">ФОРМАТ САЙТА</span>
             </h2>
           </div>
-          <p className="text-cyber-text font-sub text-sm max-w-xs ml-auto opacity-70 text-right hidden md:block">
-            Фиксированная стоимость. Никаких скрытых доплат.
-          </p>
+          <div className="pricing-brief">
+            <div className="pricing-brief__bar">
+              <span />
+              <span />
+              <span />
+              <b>pricing.board / 2026</b>
+            </div>
+            <p>
+              Не три одинаковые карточки, а три разных сценария запуска: промо для старта, лендинг под заявки и сайт компании под несколько услуг.
+            </p>
+            <div className="pricing-brief__meta">
+              <span>no shop</span>
+              <span>no heavy integrations</span>
+              <span>clean deploy</span>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((service, index) => {
-            const Icon = serviceIcons[service.icon] || Code2;
-            const featured = Boolean(service.price);
+        <div className="pricing-board">
+          {pricingTiers.map((tier, index) => {
+            const Icon = tierIcons[tier.id] || FileText;
+            const accent = tierAccent[tier.accent];
             return (
-              <div key={service.title} className={`group relative p-8 border transition-all duration-500 flex flex-col justify-between min-h-[320px] ${featured ? 'bg-cyber-dark border-cyber-neon shadow-[0_0_30px_rgba(157,111,255,0.1)]' : 'bg-cyber-dark/50 border-white/5 hover:border-cyber-cyan/50'}`}>
-                <div>
-                  <div className={`mb-6 transition-colors duration-300 ${featured ? 'text-cyber-neon' : 'text-white/30 group-hover:text-cyber-cyan'}`}>
-                    <Icon size={48} strokeWidth={1.5} />
-                  </div>
-                  <h3 className="font-header font-bold text-xl text-white mb-4 tracking-wide group-hover:text-cyber-cyan transition-colors duration-300">{service.title}</h3>
-                  <p className="font-body text-sm text-cyber-text font-light leading-relaxed opacity-80">{service.text}</p>
+              <article key={tier.id} className={`pricing-thread ${tier.featured ? 'pricing-thread--featured' : ''} ${accent.glow}`}>
+                <div className={`pricing-thread__rail bg-gradient-to-b ${accent.line}`} />
+                <div className="pricing-thread__index">
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <small>{tier.code}</small>
                 </div>
-                {service.price && (
-                  <div className="mt-6 pt-6 border-t border-white/10">
-                    <div className="font-sub text-xs uppercase tracking-widest text-gray-400 mb-1">Фиксировано</div>
-                    <div className="font-header font-black text-3xl text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{service.price}</div>
+                <div className="pricing-thread__body">
+                  <div className="pricing-thread__top">
+                    <div className={`pricing-thread__icon ${accent.bg} ${accent.text} ${accent.border}`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-header font-black text-2xl md:text-3xl text-white uppercase leading-none">{tier.name}</h3>
+                        {tier.featured && <span className="pricing-thread__badge">Оптимальный</span>}
+                      </div>
+                      <p className={`mt-2 font-sub text-xs uppercase tracking-[0.22em] ${accent.text}`}>{tier.title}</p>
+                    </div>
                   </div>
-                )}
-                <div className="absolute top-4 right-4 font-sub text-xs font-bold text-white/10">0{index + 1}</div>
-              </div>
+
+                  <div className="pricing-thread__price">
+                    <span>от</span>
+                    <strong>{tier.price}</strong>
+                  </div>
+
+                  <p className="pricing-thread__lead">{tier.lead}</p>
+
+                  <div className="pricing-thread__fit">
+                    <b>Кому:</b>
+                    <span>{tier.fit}</span>
+                  </div>
+
+                  <ul className="pricing-thread__scope">
+                    {tier.scope.map((item) => (
+                      <li key={item}>
+                        <Check className={`w-4 h-4 ${accent.text}`} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="pricing-thread__footer">
+                    <div>
+                      <small>Срок</small>
+                      <b>{tier.timeline}</b>
+                    </div>
+                    <a
+                      href="#contact"
+                      className={`pricing-thread__cta ${accent.text}`}
+                      data-open-modal
+                      data-plan={tier.title}
+                      data-price={tier.price}
+                    >
+                      Обсудить <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+                <div className="pricing-thread__result">
+                  <span>Итог</span>
+                  <p>{tier.outcome}</p>
+                </div>
+              </article>
             );
           })}
+        </div>
+
+        <div className="pricing-note">
+          <span>Важно:</span>
+          <p>Все тарифы без интернет-магазина, личных кабинетов и сложных внешних интеграций. Такие задачи считаются отдельно, чтобы не раздувать базовые пакеты.</p>
         </div>
       </div>
     </section>

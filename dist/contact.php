@@ -18,7 +18,8 @@ function field(string $name): string {
 
 $name = field('name');
 $contact = field('contact');
-$price = '45 000 ₽';
+$price = field('price') !== '' ? field('price') : 'Тариф по задаче';
+$plan = field('plan') !== '' ? field('plan') : 'Тариф по задаче';
 $message = field('message');
 $agree = field('personal_data_agree');
 $privacyRead = field('privacy_read');
@@ -31,7 +32,7 @@ if ($name === '' || $contact === '' || $message === '' || $agree !== 'yes' || $p
     exit;
 }
 
-if (mb_strlen($name) > 120 || mb_strlen($contact) > 180 || mb_strlen($message) > 3000) {
+if (mb_strlen($name) > 120 || mb_strlen($contact) > 180 || mb_strlen($price) > 80 || mb_strlen($plan) > 120 || mb_strlen($message) > 3000) {
     http_response_code(422);
     echo json_encode(['ok' => false, 'message' => 'Проверьте длину полей формы.'], JSON_UNESCAPED_UNICODE);
     exit;
@@ -43,6 +44,7 @@ $body = implode("\n", [
     '',
     'Имя: ' . $name,
     'Контакт: ' . $contact,
+    'Тариф: ' . $plan,
     'Стоимость: ' . $price,
     'Согласие на обработку ПД: yes',
     'Версия согласия: ' . $consentVersion,
