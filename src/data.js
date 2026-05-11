@@ -1,18 +1,27 @@
 export const services = [
   {
-    title: 'Лендинг',
-    price: 'от 15 000 ₽',
-    text: 'Быстрый сайт для услуги, продукта или личного бренда с сильной первой секцией и заявкой в Telegram.'
+    title: 'Сайт под ключ',
+    price: '45 000 ₽',
+    text: 'Дизайн, адаптив, форма заявок, базовая аналитика, юридические страницы и запуск на хостинге.',
+    icon: 'rocket'
   },
   {
-    title: 'Сайт компании',
-    price: 'от 25 000 ₽',
-    text: 'Структурный сайт с услугами, кейсами, преимуществами, контактами и понятной навигацией.'
+    title: 'Чистый код',
+    price: '',
+    text: 'React/HTML без конструкторов. Быстрая загрузка, понятная структура и нормальная поддержка после запуска.',
+    icon: 'code'
   },
   {
-    title: 'Доработка',
-    price: 'от 5 000 ₽',
-    text: 'Правки, новые блоки, перенос на хостинг, адаптация под мобильные и ускорение загрузки.'
+    title: 'Визуал',
+    price: '',
+    text: 'Темная технологичная подача, крупная типографика, неоновые акценты и аккуратные интерактивные состояния.',
+    icon: 'design'
+  },
+  {
+    title: 'Запуск',
+    price: '',
+    text: 'Подключение домена, перенос файлов, базовая проверка страниц и помощь с публикацией проекта.',
+    icon: 'shield'
   }
 ];
 
@@ -21,6 +30,8 @@ export const portfolio = [
     id: 1,
     title: 'Nerix',
     category: 'IT / Digital',
+    year: '2026',
+    client: 'Nerix',
     imageUrl: '/img/nerix.png',
     additionalImages: ['/img/nerix2.png', '/img/nerix3.png'],
     description: 'Темный технологичный сайт для digital-команды с акцентом на премиальный визуал.',
@@ -33,8 +44,10 @@ export const portfolio = [
     id: 2,
     title: 'Gear Service',
     category: 'Автосервис',
+    year: '2026',
+    client: 'Gear Service',
     imageUrl: '/img/gear.png',
-    additionalImages: ['/img/gear2.png'],
+    additionalImages: ['/img/gear.png', '/img/gear2.png'],
     description: 'Сайт для сервиса с быстрым объяснением услуг, преимуществ и контакта.',
     challenge: 'Посетитель должен быстро понять услуги и перейти к записи.',
     solution: 'Сделал контрастные блоки, понятную структуру услуг и заметный призыв к действию.',
@@ -45,8 +58,10 @@ export const portfolio = [
     id: 3,
     title: 'Code Craft',
     category: 'Образование',
+    year: '2026',
+    client: 'Code Craft',
     imageUrl: '/img/cc.png',
-    additionalImages: ['/img/cc2.png'],
+    additionalImages: ['/img/cc.png', '/img/cc2.png'],
     description: 'Витрина образовательного продукта с современным техно-визуалом.',
     challenge: 'Нужно было сделать курс визуально убедительным и не похожим на типовую школу.',
     solution: 'Использовал темный интерфейс, яркие акценты и карточки для быстрых смыслов.',
@@ -57,8 +72,10 @@ export const portfolio = [
     id: 4,
     title: 'Development',
     category: 'Разработка',
+    year: '2026',
+    client: 'Development',
     imageUrl: '/img/devolpmen.png',
-    additionalImages: ['/img/devolpmen2.png'],
+    additionalImages: ['/img/devolpmen.png', '/img/devolpmen2.png'],
     description: 'Промо-страница услуги разработки с сильной визуальной подачей.',
     challenge: 'Нужно было быстро донести ценность разработки без длинных текстов.',
     solution: 'Сделал крупные секции, короткие тезисы и визуальные акценты на скорости работы.',

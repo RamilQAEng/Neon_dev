@@ -1,3 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cyber-bg: #0A091A;
+  --color-cyber-dark: #110E23;
+  --color-cyber-neon: #9D6FFF;
+  --color-cyber-cyan: #00FFD1;
+  --color-cyber-pink: #FF70B8;
+  --color-cyber-text: #E0E0E0;
+
+  --font-header: Montserrat, sans-serif;
+  --font-sub: Montserrat, sans-serif;
+  --font-body: Inter, sans-serif;
+
+  --shadow-neon: 0 0 10px rgba(157, 111, 255, 0.5), 0 0 20px rgba(157, 111, 255, 0.3);
+  --shadow-neon-strong: 0 0 15px rgba(157, 111, 255, 0.8), 0 0 30px rgba(157, 111, 255, 0.5);
+  --shadow-cyan: 0 0 10px rgba(0, 255, 209, 0.5);
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -34,6 +53,26 @@ a {
 .text-outline-white {
   color: transparent;
   -webkit-text-stroke: 1px rgba(255, 255, 255, 0.85);
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, transparent, black 18%, black 78%, transparent);
+}
+
+.hero-scan {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 209, 0.12) 0,
+      rgba(0, 255, 209, 0.12) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  mask-image: linear-gradient(110deg, transparent 0%, black 24%, black 62%, transparent 82%);
 }
 
 .container {

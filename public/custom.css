@@ -795,7 +795,7 @@ html.modal-open body {
 
 .quick-modal__dialog {
   position: relative;
-  width: min(100%, 860px);
+  width: min(100%, 1040px);
   max-height: min(92vh, 820px);
   overflow: auto;
   background: rgba(12, 10, 29, 0.96);
@@ -841,17 +841,22 @@ html.modal-open body {
 
 .quick-modal__grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.86fr) minmax(360px, 1.14fr);
-  gap: 28px;
-  padding: 34px;
+  grid-template-columns: minmax(0, 0.86fr) minmax(420px, 1.14fr);
+  gap: 34px;
+  padding: 40px;
+}
+
+.quick-modal__copy,
+.quick-modal__form {
+  min-width: 0;
 }
 
 .quick-modal__copy h2 {
   margin: 14px 0 18px;
   color: #fff;
   font-family: Montserrat, sans-serif;
-  font-size: clamp(38px, 6vw, 62px);
-  line-height: 0.95;
+  font-size: clamp(40px, 4.7vw, 58px);
+  line-height: 0.92;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -869,8 +874,9 @@ html.modal-open body {
 }
 
 .quick-modal__price {
-  margin-top: 24px;
-  padding: 18px;
+  max-width: 320px;
+  margin-top: 22px;
+  padding: 14px 16px;
   background: rgba(0, 255, 209, 0.07);
   border: 1px solid rgba(0, 255, 209, 0.2);
 }
@@ -886,10 +892,10 @@ html.modal-open body {
 
 .quick-modal__price strong {
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   color: #00FFD1;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 34px;
+  font-size: 28px;
   line-height: 1;
 }
 
@@ -956,10 +962,30 @@ html.modal-open body {
   background: #00FFD1;
 }
 
+@media (max-width: 1040px) {
+  .quick-modal__dialog {
+    width: min(100%, 940px);
+  }
+
+  .quick-modal__grid {
+    grid-template-columns: minmax(0, 0.78fr) minmax(400px, 1.22fr);
+    gap: 28px;
+    padding: 34px;
+  }
+
+  .quick-modal__copy h2 {
+    font-size: clamp(36px, 4.4vw, 48px);
+  }
+
+  .quick-modal__price {
+    max-width: 280px;
+  }
+}
+
 @media (max-width: 860px) {
   .floating-discuss {
-    right: 88px;
-    bottom: 22px;
+    right: 96px;
+    bottom: 24px;
     min-height: 52px;
     padding: 0 18px 0 13px;
     gap: 10px;
@@ -996,11 +1022,17 @@ html.modal-open body {
     padding: 24px;
   }
 
+  .quick-modal__copy h2 {
+    max-width: 100%;
+    font-size: clamp(36px, 9vw, 54px);
+  }
+
   .quick-modal__copy p {
     font-size: 15px;
   }
 
   .quick-modal__price {
+    max-width: none;
     margin-top: 18px;
   }
 
@@ -1098,17 +1130,32 @@ html.modal-open body {
 
 @media (max-width: 520px) {
   .floating-discuss {
-    left: 14px;
-    right: 82px;
+    left: 18px;
+    right: auto;
+    bottom: 24px;
     justify-content: center;
-    min-width: 0;
-    padding: 0 12px;
+    width: calc(100vw - 112px);
+    max-width: 290px;
+    min-height: 46px;
+    padding: 0 14px 0 10px;
   }
 
   .floating-discuss strong {
-    max-width: 150px;
+    max-width: 180px;
+    font-size: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .floating-discuss span {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+  }
+
+  .floating-discuss span::before {
+    width: 11px;
+    height: 11px;
   }
 
   .live-card__screen,
@@ -1116,6 +1163,15 @@ html.modal-open body {
   .quick-modal__grid,
   .sales-contact__form {
     padding: 18px;
+  }
+
+  .quick-modal__copy h2 {
+    font-size: clamp(34px, 13vw, 46px);
+    line-height: 0.94;
+  }
+
+  .quick-modal__price strong {
+    font-size: 26px;
   }
 
   .sales-contact__form-top {

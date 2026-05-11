@@ -5,6 +5,7 @@
     email: 'qubitaibots@gmail.com',
     phone: '+7 901 272-89-16'
   };
+  let quickModalOpener = null;
 
   const liveProjects = [
     {
@@ -81,6 +82,7 @@
     const modal = document.createElement('div');
     modal.className = 'quick-modal';
     modal.setAttribute('aria-hidden', 'true');
+    modal.inert = true;
     modal.innerHTML = `
       <div class="quick-modal__overlay" data-close-modal></div>
       <div class="quick-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="quick-modal-title">
@@ -140,9 +142,18 @@
     });
   }
 
-  function openQuickModal() {
+  function openQuickModal(opener) {
     buildQuickModal();
     const modal = document.querySelector('.quick-modal');
+    if (opener?.currentTarget) {
+      quickModalOpener = opener.currentTarget;
+    } else if (opener instanceof HTMLElement) {
+      quickModalOpener = opener;
+    } else if (document.activeElement instanceof HTMLElement && !document.activeElement.closest('.quick-modal')) {
+      quickModalOpener = document.activeElement;
+    }
+
+    modal.inert = false;
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
     document.documentElement.classList.add('modal-open');
@@ -152,8 +163,18 @@
   function closeQuickModal() {
     const modal = document.querySelector('.quick-modal');
     if (!modal) return;
+
+    if (modal.contains(document.activeElement)) {
+      if (quickModalOpener?.isConnected) {
+        quickModalOpener.focus({ preventScroll: true });
+      } else {
+        document.activeElement.blur();
+      }
+    }
+
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
+    modal.inert = true;
     document.documentElement.classList.remove('modal-open');
   }
 
@@ -170,7 +191,7 @@
       if (!shouldOpenModal(trigger)) return;
 
       event.preventDefault();
-      openQuickModal();
+      openQuickModal(trigger);
     });
   }
 
