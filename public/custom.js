@@ -5,6 +5,13 @@
     email: 'qubitaibots@gmail.com',
     phone: '+7 901 272-89-16'
   };
+  const promo = {
+    storageKey: 'neonPromoExpiresAt',
+    code: 'NEON-15',
+    discount: 15000,
+    basePrice: 45000,
+    durationMs: 15 * 60 * 1000
+  };
   let quickModalOpener = null;
 
   const liveProjects = [
@@ -51,6 +58,51 @@
     }
   }
 
+  function formatPrice(amount) {
+    return amount.toLocaleString('ru-RU') + ' ₽';
+  }
+
+  function isPromoActive() {
+    return Number(localStorage.getItem(promo.storageKey)) > Date.now();
+  }
+
+  function ensurePromoActive() {
+    const stored = Number(localStorage.getItem(promo.storageKey));
+    if (stored > Date.now()) return stored;
+
+    const nextExpiresAt = Date.now() + promo.durationMs;
+    localStorage.setItem(promo.storageKey, String(nextExpiresAt));
+    window.dispatchEvent(new CustomEvent('neon-promo-activated', { detail: { expiresAt: nextExpiresAt } }));
+    return nextExpiresAt;
+  }
+
+  function promoPriceText(basePrice = promo.basePrice) {
+    return `от ${formatPrice(basePrice - promo.discount)} (${promo.code})`;
+  }
+
+  function promoMessageText() {
+    return `Заявка без сообщения: уточнить задачу в переписке.\n[Промокод ${promo.code} активирован: скидка ${formatPrice(promo.discount)}]`;
+  }
+
+  function applyPromoToForm(form, basePrice = promo.basePrice) {
+    if (!form) return false;
+    ensurePromoActive();
+
+    const priceField = form.querySelector('input[name="price"]');
+    const planField = form.querySelector('input[name="plan"]');
+    const messageField = form.querySelector('input[name="message"]');
+
+    if (priceField) priceField.value = promoPriceText(basePrice);
+    if (planField && (!planField.value || planField.value === 'Тариф по задаче')) {
+      planField.value = `Проект с промокодом ${promo.code}`;
+    }
+    if (messageField && !messageField.value.includes(`Промокод ${promo.code}`)) {
+      messageField.value = promoMessageText();
+    }
+
+    return true;
+  }
+
   function watchLegacyFooter() {
     const observer = new MutationObserver(() => removeLegacyFooter());
     observer.observe(document.body, { childList: true, subtree: true });
@@ -60,6 +112,7 @@
   async function sendLeadForm(form) {
     const status = form.querySelector('.form-status');
     const submit = form.querySelector('button[type="submit"]');
+    applyPromoToForm(form);
     const formData = new FormData(form);
     status.textContent = 'Отправляю...';
     submit.disabled = true;
@@ -152,6 +205,7 @@
   }
 
   function openQuickModal(opener) {
+    ensurePromoActive();
     buildQuickModal();
     const modal = document.querySelector('.quick-modal');
     const trigger = opener?.currentTarget || opener;
@@ -163,18 +217,22 @@
       quickModalOpener = document.activeElement;
     }
 
-    const price = trigger?.dataset?.price || '45 000 ₽';
+    const price = promoPriceText();
     const plan = trigger?.dataset?.plan || 'Тариф по задаче';
-    const priceLabel = trigger?.dataset?.price ? plan : 'Старт от';
+    const priceLabel = `Промокод ${promo.code}`;
     const priceCaption = modal.querySelector('.quick-modal__price span');
     const priceValue = modal.querySelector('.quick-modal__price strong');
     const priceField = modal.querySelector('input[name="price"]');
     const planField = modal.querySelector('input[name="plan"]');
+    const messageField = modal.querySelector('input[name="message"]');
 
     if (priceCaption) priceCaption.textContent = priceLabel;
     if (priceValue) priceValue.textContent = price;
     if (priceField) priceField.value = price;
-    if (planField) planField.value = plan;
+    if (planField) planField.value = `Проект с промокодом ${promo.code}`;
+    if (messageField) {
+      messageField.value = promoMessageText();
+    }
     if (trigger?.dataset?.price) {
       trackGoal('tariff_click', { plan, price });
     }
@@ -226,7 +284,7 @@
     section.className = 'sales-contact';
     section.id = 'contact';
     section.innerHTML = `
-      <div class="live-projects">
+      <div class="live-projects" id="live-projects">
         <div class="live-projects__head">
           <div class="sales-contact__kicker">Действующие сайты</div>
           <h2>LIVE <span>PROJECTS</span></h2>
@@ -275,7 +333,7 @@
         </div>
       </div>
 
-      <div class="sales-contact__head">
+      <div class="sales-contact__head" id="contact-form">
         <div class="sales-contact__kicker">Связаться</div>
         <h2>ЗАПУСТИМ <span>ПРОЕКТ</span></h2>
         <div class="sales-contact__price">
@@ -358,6 +416,7 @@
 
     section.querySelector('form').addEventListener('submit', async (event) => {
       event.preventDefault();
+      applyPromoToForm(event.currentTarget);
       sendLeadForm(event.currentTarget);
     });
   }
@@ -395,12 +454,13 @@
     button.className = 'floating-discuss';
     button.type = 'button';
     button.innerHTML = '<span></span><strong>Обсудить проект</strong>';
-    button.addEventListener('click', openQuickModal);
+    button.addEventListener('click', (event) => openQuickModal(event));
 
     document.body.appendChild(button);
   }
 
   window.addEventListener('DOMContentLoaded', () => {
+    ensurePromoActive();
     removeLegacyFooter();
     watchLegacyFooter();
     buildQuickModal();

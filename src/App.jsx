@@ -15,6 +15,7 @@ import {
   Menu,
   MessageCircle,
   MonitorSmartphone,
+  PhoneCall,
   Rocket,
   Send,
   ShieldCheck,
@@ -29,9 +30,10 @@ import { faqItems, portfolio, pricingTiers, testimonials, workflow } from './dat
 const navItems = [
   ['Тарифы', '#services'],
   ['Кейсы', '#portfolio'],
+  ['Отзывы', '#testimonials'],
   ['Процесс', '#workflow'],
   ['Условия', '#terms'],
-  ['Контакт', '#contact']
+  ['Контакты', '#contact-form']
 ];
 
 const tierIcons = {
@@ -64,7 +66,7 @@ const tierAccent = {
   }
 };
 
-const PROMO_DURATION_MS = 5 * 60 * 1000;
+const PROMO_DURATION_MS = 15 * 60 * 1000;
 const PROMO_STORAGE_KEY = 'neonPromoExpiresAt';
 const PROMO_EVENT = 'neon-promo-activated';
 const PROMO_DISCOUNT = 15000;
@@ -91,11 +93,14 @@ function activatePromoCode() {
   return nextExpiresAt;
 }
 
+function ensurePromoCode() {
+  const stored = Number(window.localStorage.getItem(PROMO_STORAGE_KEY));
+  if (stored > Date.now()) return stored;
+  return activatePromoCode();
+}
+
 function usePromoTimer() {
-  const [expiresAt, setExpiresAt] = useState(() => {
-    const stored = Number(window.localStorage.getItem(PROMO_STORAGE_KEY));
-    return stored > Date.now() ? stored : null;
-  });
+  const [expiresAt, setExpiresAt] = useState(() => ensurePromoCode());
   const [remaining, setRemaining] = useState(PROMO_DURATION_MS);
 
   useEffect(() => {
@@ -112,8 +117,8 @@ function usePromoTimer() {
     const tick = () => {
       const next = expiresAt - Date.now();
       if (next <= 0) {
-        window.localStorage.removeItem(PROMO_STORAGE_KEY);
-        setExpiresAt(null);
+        const refreshed = activatePromoCode();
+        setExpiresAt(refreshed);
         setRemaining(PROMO_DURATION_MS);
         return;
       }
@@ -133,8 +138,8 @@ function usePromoTimer() {
   return { active: Boolean(expiresAt), remaining, activate };
 }
 
-function PromoAnchor() {
-  const { active, remaining, activate } = usePromoTimer();
+function PromoAnchor({ openModal }) {
+  const { remaining } = usePromoTimer();
 
   return (
     <motion.aside
@@ -156,27 +161,24 @@ function PromoAnchor() {
         <span>-15 000 ₽</span>
         <small>на запуск сайта под ключ</small>
       </div>
-      <div className="promo-anchor__timer">
-        <Timer className="w-4 h-4" />
-        <span>{active ? 'бронь активна' : 'активация на 5 минут'}</span>
-        <b>{formatPromoTime(remaining)}</b>
-      </div>
       <button
-        onClick={activate}
+        onClick={() => openModal('Проект с промокодом NEON-15', 'скидка 15 000 ₽')}
         data-plan="Промокод NEON-15"
         data-price="скидка 15 000 ₽"
         className="promo-anchor__cta"
       >
-        {active ? 'Скидка активна!' : 'Активировать'}
+        <span>Промокод активен</span>
+        <b>{formatPromoTime(remaining)}</b>
         <ArrowRight className="w-4 h-4" />
       </button>
     </motion.aside>
   );
 }
 
-function FloatingPromo() {
+function FloatingPromo({ openModal }) {
   const [visible, setVisible] = useState(false);
-  const { active, activate } = usePromoTimer();
+  const [open, setOpen] = useState(false);
+  const { active, remaining } = usePromoTimer();
 
   useEffect(() => {
     const onScroll = () => setVisible(window.pageYOffset > 520);
@@ -188,29 +190,62 @@ function FloatingPromo() {
   return (
     <AnimatePresence>
       {visible && (
-        <motion.button
-          onClick={activate}
+        <motion.div
+          className="floating-promo-wrap"
           initial={{ opacity: 0, x: 18, scale: 0.88 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 18, scale: 0.88 }}
-          className={`floating-promo ${active ? 'floating-promo--active' : ''}`}
-          aria-label="Активировать промокод NEON-15 на скидку 15 000 рублей"
         >
-          <span className="floating-promo__icon">
-            <Zap className="w-4 h-4" />
-          </span>
-          <span className="floating-promo__copy">
-            <b>{active ? 'NEON-15' : '-15K'}</b>
-            <small>{active ? 'активен' : 'промо'}</small>
-          </span>
-        </motion.button>
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                className="floating-promo-card"
+                initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.96 }}
+              >
+                <div className="floating-promo-card__top">
+                  <span>Промокод NEON-15</span>
+                  <b>{formatPromoTime(remaining)}</b>
+                </div>
+                <strong>−15 000 ₽</strong>
+                <small>на запуск сайта под ключ</small>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    openModal('Проект с промокодом NEON-15', 'скидка 15 000 ₽');
+                  }}
+                >
+                  Заказать со скидкой <ArrowRight className="w-4 h-4" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <button
+            type="button"
+            onClick={() => { ensurePromoCode(); setOpen((value) => !value); }}
+            className={`floating-promo ${active ? 'floating-promo--active' : ''}`}
+            aria-label="Показать промокод NEON-15 на скидку 15 000 рублей"
+            aria-expanded={open}
+          >
+            <span className="floating-promo__icon">
+              <Zap className="w-4 h-4" />
+            </span>
+            <span className="floating-promo__copy">
+              <b>{formatPromoTime(remaining)}</b>
+              <small>акция</small>
+            </span>
+          </button>
+        </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
 function PromoInModal({ rawPrice }) {
-  const { active, remaining, activate } = usePromoTimer();
+  const { active, remaining } = usePromoTimer();
   const discounted = rawPrice ? rawPrice - PROMO_DISCOUNT : null;
 
   return (
@@ -244,7 +279,7 @@ function PromoInModal({ rawPrice }) {
           <span>Скидка зафиксирована — осталось {formatPromoTime(remaining)}</span>
         </div>
       ) : (
-        <button onClick={activate} className="promo-in-modal__activate">
+        <button onClick={ensurePromoCode} className="promo-in-modal__activate">
           <Zap className="w-3.5 h-3.5" />
           Активировать скидку −15 000 ₽
         </button>
@@ -321,16 +356,14 @@ function Header({ openModal }) {
 function Hero({ openModal }) {
   return (
     <section id="hero" className="min-h-screen flex flex-col justify-center relative pt-20 overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(157,111,255,0.16),transparent_32%),linear-gradient(245deg,rgba(0,255,209,0.12),transparent_30%)]" />
-      <div className="absolute inset-0 hero-grid opacity-35" />
-      <div className="absolute inset-0 hero-scan opacity-20" />
-      <div className="absolute -top-20 right-0 w-[58vw] h-[120vh] bg-[linear-gradient(135deg,rgba(0,255,209,0.14),rgba(157,111,255,0.08)_42%,transparent_43%)] skew-x-[-14deg] opacity-80" />
+      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(37,99,235,0.18),transparent_36%),linear-gradient(245deg,rgba(34,197,94,0.12),transparent_32%)]" />
+      <div className="absolute inset-0 hero-grid opacity-25" />
+      <div className="absolute -top-20 right-0 w-[58vw] h-[120vh] bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(34,197,94,0.08)_42%,transparent_43%)] skew-x-[-14deg] opacity-70" />
       <div className="absolute top-24 right-[-6rem] hidden lg:block font-header font-black text-[12rem] xl:text-[17rem] leading-none text-white/[0.035] uppercase select-none">
-        NEON
+        SITE
       </div>
-      <div className="absolute bottom-16 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyber-cyan/35 to-transparent" />
       <div className="absolute top-[38%] right-10 hidden xl:block w-[360px]">
-        <PromoAnchor />
+        <PromoAnchor openModal={openModal} />
       </div>
       <div className="container mx-auto px-6 relative z-10">
         <div className="absolute top-0 left-6 w-[1px] h-32 bg-gradient-to-b from-cyber-neon to-transparent opacity-50 hidden md:block" />
@@ -346,9 +379,9 @@ function Hero({ openModal }) {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="font-header font-black text-4xl md:text-8xl lg:text-9xl leading-[0.95] text-white uppercase tracking-normal"
           >
-            РАЗРАБОТКА{' '}
+            САЙТ ДЛЯ{' '}
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400 relative z-20">
-              САЙТОВ ДЛЯ БИЗНЕСА
+              ВАШЕГО БИЗНЕСА
             </span>
           </motion.h1>
           <motion.div
@@ -357,7 +390,7 @@ function Hero({ openModal }) {
             transition={{ duration: 0.8, delay: 0.45 }}
             className="mt-8 inline-flex flex-wrap items-center gap-3 border border-cyber-cyan/35 bg-cyber-cyan/10 px-5 py-3 font-sub text-sm md:text-base font-bold uppercase tracking-[0.14em] text-white shadow-cyan"
           >
-            <span className="text-cyber-cyan">от 45 000 ₽</span>
+            <span className="text-cyber-cyan">под ключ от 45 000 ₽</span>
             <span className="text-white/45">/</span>
             <span>фикс, без скрытых доплат</span>
           </motion.div>
@@ -366,19 +399,24 @@ function Hero({ openModal }) {
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1 }} className="flex flex-col md:flex-row justify-between items-start md:items-end mt-16 gap-10">
           <div className="max-w-xl">
-            <h2 className="font-sub font-light text-2xl md:text-3xl text-white mb-6 tracking-wide">
-              САЙТ ПОД КЛЮЧ <span className="text-cyber-neon font-bold border-b border-cyber-neon">ЗА 14 ДНЕЙ</span>
+            <h2 className="font-sub font-bold text-2xl md:text-3xl text-white mb-5 tracking-wide uppercase">
+              Дизайн, адаптив, форма заявок и запуск
             </h2>
             <p className="font-body text-cyber-text text-lg font-light leading-relaxed border-l-4 border-cyber-dark pl-6">
-              Чистый код, без конструкторов, с адаптивом, заявками и настройкой аналитики. Детали уточним в переписке, а на старте сразу понятно по срокам и бюджету.
+              Без конструктора, подписок и скрытых доплат. Сразу понятно, что входит в работу и сколько стоит старт.
             </p>
+            <div className="hero-mobile-points" aria-label="Что входит в сайт">
+              <span><MonitorSmartphone className="w-4 h-4" /> Мобильная версия</span>
+              <span><ShieldCheck className="w-4 h-4" /> Фиксированная цена</span>
+              <span><PhoneCall className="w-4 h-4" /> Заявки и контакты</span>
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto">
             <button
               onClick={() => openModal()}
-              className="px-7 md:px-8 py-4 bg-cyber-neon text-white font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon hover:shadow-none text-center"
+              className="px-7 md:px-8 py-4 bg-cyber-cyan text-cyber-bg font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-white transition-all duration-300 shadow-cyan hover:shadow-none text-center"
             >
-              Получить консультацию
+              Обсудить проект
             </button>
             <a href="#workflow" className="px-7 md:px-8 py-4 border border-white/20 text-white font-sub font-bold tracking-wider uppercase text-xs md:text-sm hover:border-cyber-cyan hover:text-cyber-cyan transition-all duration-300 flex items-center justify-center bg-cyber-dark/50 backdrop-blur-sm">
               Как я работаю
@@ -386,7 +424,7 @@ function Hero({ openModal }) {
           </div>
         </motion.div>
         <div className="mt-8 xl:hidden">
-          <PromoAnchor />
+          <PromoAnchor openModal={openModal} />
         </div>
       </div>
     </section>
@@ -394,9 +432,9 @@ function Hero({ openModal }) {
 }
 
 const statsData = [
-  { value: '8+', label: 'Сайтов запущено' },
-  { value: '48 ч', label: 'Минимальный срок' },
-  { value: '100%', label: 'Проектов в срок' },
+  { value: '8+', label: 'Запущенных сайтов' },
+  { value: '7 дн.', label: 'Стартовый срок' },
+  { value: '45К', label: 'Цена старта' },
   { value: '50/50', label: 'Схема оплаты' },
 ];
 
@@ -578,23 +616,23 @@ function Portfolio({ openModal }) {
       <div className="absolute top-10 right-0 font-header font-black text-[10rem] md:text-[20rem] text-white/5 leading-none select-none -z-1 overflow-hidden whitespace-nowrap">REAL</div>
       <div className="container mx-auto px-6 relative z-10">
         <div className="mb-20 pt-10">
-          <span className="text-cyber-pink font-sub text-sm tracking-[0.3em] uppercase font-bold">Портфолио</span>
+          <span className="text-cyber-cyan font-sub text-sm tracking-[0.3em] uppercase font-bold">Кейсы</span>
           <h2 className="font-header font-black text-4xl md:text-6xl text-white uppercase mt-2">
-            ПРИМЕРЫ <span className="text-cyber-pink">РАБОТ</span>
+            ПРИМЕРЫ <span className="text-cyber-cyan">ДЛЯ БИЗНЕСА</span>
           </h2>
           <p className="mt-4 text-gray-400 max-w-2xl font-light">
-            Реальные кейсы для бизнеса. От автосервиса до IT-компании. Функциональность, скорость и стиль.
+            Сделал кейсы крупнее и понятнее: отрасль, задача, решение и результат. Изображения можно открыть и рассмотреть отдельно.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="portfolio-grid">
           {portfolio.map((project) => (
-            <button key={project.id} onClick={() => setActive(project)} className="group relative bg-[#0A091A] border border-white/10 overflow-hidden hover:border-white/20 transition-colors duration-500 cursor-pointer text-left">
-              <div className="relative h-72 overflow-hidden">
+            <button key={project.id} onClick={() => setActive(project)} className="portfolio-card group">
+              <div className="portfolio-card__image">
                 <div className="absolute inset-0 bg-cyber-dark/40 group-hover:bg-transparent transition-colors duration-500 z-10" />
                 <img src={project.imageUrl} alt={project.title} className="w-full h-full object-cover transition-all duration-700 transform group-hover:scale-105" />
                 <div className="absolute top-4 left-4 z-20">
-                  <span className="px-4 py-1 bg-cyber-bg/90 border border-cyber-cyan text-cyber-cyan text-xs font-sub font-bold tracking-widest uppercase backdrop-blur-md shadow-lg">{project.category}</span>
+                  <span className="portfolio-card__tag">{project.category}</span>
                 </div>
                 <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 backdrop-blur-[2px]">
                   <div className="w-16 h-16 rounded-full border border-white/50 flex items-center justify-center bg-cyber-bg/50 text-white transform scale-75 group-hover:scale-100 transition-transform duration-300">
@@ -602,18 +640,16 @@ function Portfolio({ openModal }) {
                   </div>
                 </div>
               </div>
-              <div className="p-8 relative">
-                <h3 className="font-header font-bold text-3xl text-white mb-3 uppercase tracking-wide group-hover:text-cyber-neon transition-colors duration-300">{project.title}</h3>
-                <p className="font-body text-gray-400 font-light text-sm mb-8 leading-relaxed min-h-[3rem] line-clamp-2">{project.description}</p>
-                <div className="flex flex-wrap gap-3 pt-4 border-t border-white/5">
+              <div className="portfolio-card__body">
+                <h3>{project.title}</h3>
+                <p>{project.description}</p>
+                <div className="portfolio-card__chips">
                   {project.techStack.map((tech) => (
-                    <span key={tech} className="text-[11px] font-sub font-bold text-cyber-cyan/80 uppercase tracking-wider border border-white/5 px-2 py-1 rounded-sm">
-                      {tech}
-                    </span>
+                    <span key={tech}>{tech}</span>
                   ))}
                 </div>
+                <span className="portfolio-card__open">Открыть кейс <ArrowRight className="w-4 h-4" /></span>
               </div>
-              <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyber-pink via-cyber-neon to-cyber-cyan scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
             </button>
           ))}
         </div>
@@ -633,10 +669,16 @@ function Portfolio({ openModal }) {
 }
 
 function ProjectModal({ project, onClose, openModal }) {
+  const [zoomImage, setZoomImage] = useState(null);
+
   useEffect(() => {
     if (!project) return undefined;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'unset'; };
+  }, [project]);
+
+  useEffect(() => {
+    if (!project) setZoomImage(null);
   }, [project]);
 
   return (
@@ -646,7 +688,7 @@ function ProjectModal({ project, onClose, openModal }) {
           <button onClick={onClose} className="fixed top-6 right-6 z-[110] w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-cyber-neon hover:border-cyber-neon transition-all duration-300 group" aria-label="Закрыть проект">
             <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
           </button>
-          <div className="relative h-[40vh] md:h-[80vh] w-full">
+          <button type="button" onClick={() => setZoomImage(project.imageUrl)} className="relative h-[40vh] md:h-[80vh] w-full block text-left" aria-label={`Открыть изображение ${project.title}`}>
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A091A]/50 to-[#0A091A] z-10" />
             <img src={project.imageUrl} alt={project.title} className="w-full h-full object-cover" />
             <div className="absolute bottom-0 left-0 w-full z-20 p-6 md:p-12">
@@ -657,9 +699,10 @@ function ProjectModal({ project, onClose, openModal }) {
                 <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="font-header font-black text-3xl md:text-8xl text-white uppercase leading-none mb-4">
                   {project.title}
                 </motion.h1>
+                <span className="project-image-hint"><Eye className="w-4 h-4" /> Открыть изображение</span>
               </div>
             </div>
-          </div>
+          </button>
 
           <div className="container mx-auto px-6 py-16 md:py-24">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -701,15 +744,33 @@ function ProjectModal({ project, onClose, openModal }) {
                 </motion.div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
                   {project.additionalImages.map((image, index) => (
-                    <motion.div key={image} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 * index }} className="relative h-64 md:h-80 overflow-hidden rounded-sm group">
+                    <motion.button type="button" onClick={() => setZoomImage(image)} key={`${image}-${index}`} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 * index }} className="relative h-64 md:h-80 overflow-hidden rounded-sm group text-left">
                       <img src={image} alt={`${project.title} detail`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                       <div className="absolute inset-0 bg-cyber-neon/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-overlay" />
-                    </motion.div>
+                      <span className="project-thumb-hint"><Eye className="w-4 h-4" /> Смотреть</span>
+                    </motion.button>
                   ))}
                 </div>
               </div>
             </div>
           </div>
+
+          <AnimatePresence>
+            {zoomImage && (
+              <motion.div
+                className="image-lightbox"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setZoomImage(null)}
+              >
+                <button type="button" className="image-lightbox__close" onClick={() => setZoomImage(null)} aria-label="Закрыть изображение">
+                  <X className="w-5 h-5" />
+                </button>
+                <img src={zoomImage} alt={`${project.title} full view`} onClick={(e) => e.stopPropagation()} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>
@@ -750,15 +811,24 @@ function Testimonials() {
     <section id="testimonials" className="py-24 bg-[#05050e] border-t border-white/5 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-cyber-neon/5 filter blur-[100px] pointer-events-none" />
       <div className="container mx-auto px-6 relative z-10">
-        <div className="mb-16 text-center max-w-2xl mx-auto">
-          <span className="text-cyber-neon font-sub text-sm tracking-[0.3em] uppercase font-bold">Отзывы</span>
-          <h2 className="font-header font-black text-4xl md:text-6xl text-white uppercase mt-2">
-            ЧТО <span className="text-cyber-neon">ГОВОРЯТ</span> КЛИЕНТЫ
-          </h2>
-          <p className="mt-4 text-gray-400 font-light">Реальные отзывы от людей, которые уже запустили сайт.</p>
+        <div className="testimonials-head">
+          <div>
+            <span className="text-cyber-neon font-sub text-sm tracking-[0.3em] uppercase font-bold">Отзывы</span>
+            <h2 className="font-header font-black text-4xl md:text-6xl text-white uppercase mt-2">
+              ЧТО <span className="text-cyber-neon">ГОВОРЯТ</span> КЛИЕНТЫ
+            </h2>
+            <p className="mt-4 text-gray-400 font-light">Не идеальная витрина на 5.0, а живые впечатления после запуска и правок.</p>
+          </div>
+          <div className="testimonials-score">
+            <strong>4.8</strong>
+            <div>
+              <span>средняя оценка</span>
+              <small>по последним проектам</small>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="testimonials-track" aria-label="Отзывы клиентов">
           {testimonials.map((t, i) => {
             const colors = accentColors[t.accent];
             return (
@@ -771,9 +841,13 @@ function Testimonials() {
                 className={`tcard border ${colors.border} ${colors.bg}`}
               >
                 <div className="tcard__stars">
-                  {Array.from({ length: t.rating }).map((_, idx) => (
-                    <Star key={idx} className={`w-4 h-4 fill-current ${colors.text}`} />
+                  {Array.from({ length: 5 }).map((_, idx) => (
+                    <Star
+                      key={idx}
+                      className={`w-4 h-4 ${idx < t.rating ? `fill-current ${colors.text}` : 'text-white/15'}`}
+                    />
                   ))}
+                  <span>{t.rating}.0</span>
                 </div>
                 <p className="tcard__quote">"{t.text}"</p>
                 <div className="tcard__author">
@@ -801,9 +875,9 @@ function Workflow({ openModal }) {
         <div className="mb-20 text-center max-w-3xl mx-auto">
           <span className="text-cyber-cyan font-sub text-sm tracking-[0.3em] uppercase font-bold">Процесс</span>
           <h2 className="font-header font-black text-4xl md:text-6xl text-white mt-4 uppercase leading-tight">
-            ОТ ИДЕИ ДО САЙТА ЗА <span className="text-cyber-neon relative inline-block">2 ДНЯ</span>
+            ОТ ИДЕИ ДО САЙТА <span className="text-cyber-cyan relative inline-block">БЕЗ ЛИШНЕЙ БЮРОКРАТИИ</span>
           </h2>
-          <p className="mt-6 text-gray-400 font-light">Мы не тратим недели на бесконечные согласования. Современные технологии дают быстрый результат.</p>
+          <p className="mt-6 text-gray-400 font-light">Сначала фиксируем задачу и цену, потом показываю тестовую ссылку, вносим правки и запускаем сайт.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24 relative">
@@ -832,7 +906,7 @@ function Workflow({ openModal }) {
               <XCircle className="text-red-500" /> ОБЫЧНЫЙ ПОДХОД
             </h3>
             <ul className="space-y-4 font-body text-gray-500 text-sm">
-              <li className="flex items-start gap-3"><XCircle className="w-5 h-5 shrink-0 mt-0.5" /><span>Долгая разработка (7-14 дней)</span></li>
+              <li className="flex items-start gap-3"><XCircle className="w-5 h-5 shrink-0 mt-0.5" /><span>Неясная цена и доплаты после старта</span></li>
               <li className="flex items-start gap-3"><XCircle className="w-5 h-5 shrink-0 mt-0.5" /><span>Медленные конструкторы (Tilda, WordPress)</span></li>
               <li className="flex items-start gap-3"><span>✖</span><span>Переплата за менеджмент и лишние созвоны</span></li>
             </ul>
@@ -843,7 +917,7 @@ function Workflow({ openModal }) {
               <Zap className="text-cyber-cyan" /> МОЙ ПОДХОД
             </h3>
             <ul className="space-y-4 font-body text-gray-300 text-sm font-medium">
-              <li className="flex items-start gap-3 text-white"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Готовый сайт за <span className="text-cyber-cyan">48 часов</span></span></li>
+              <li className="flex items-start gap-3 text-white"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Срок и стоимость фиксируем <span className="text-cyber-cyan">до старта</span></span></li>
               <li className="flex items-start gap-3 text-white"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Чистый код. Мгновенная загрузка.</span></li>
               <li className="flex items-start gap-3 text-white"><span className="text-cyber-cyan">✔</span><span>Прямая связь с разработчиком.</span></li>
             </ul>
@@ -1027,6 +1101,11 @@ function ContactModal({ data, onClose }) {
   const [status, setStatus] = useState('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const { active: promoActive, remaining } = usePromoTimer();
+  const promoPrice = promoActive && data?.rawPrice
+    ? `от ${formatPrice(data.rawPrice - PROMO_DISCOUNT)} (промокод NEON-15)`
+    : promoActive
+      ? `Промокод NEON-15: скидка ${formatPrice(PROMO_DISCOUNT)} на проект`
+      : (data?.price || '');
 
   useEffect(() => {
     if (!data) return undefined;
@@ -1062,12 +1141,8 @@ function ContactModal({ data, onClose }) {
     fd.append('contact', fields.contact);
     const msgWithPromo = fields.message + (promoActive ? '\n[Промокод NEON-15 активирован]' : '');
     fd.append('message', msgWithPromo);
-    fd.append('plan', data?.plan || 'Не указан');
-    fd.append('price',
-      promoActive && data?.rawPrice
-        ? `от ${formatPrice(data.rawPrice - PROMO_DISCOUNT)} (промокод NEON-15)`
-        : (data?.price || '')
-    );
+    fd.append('plan', data?.plan || (promoActive ? 'Проект с промокодом NEON-15' : 'Не указан'));
+    fd.append('price', promoPrice);
     fd.append('personal_data_agree', 'yes');
     fd.append('privacy_read', 'yes');
 
@@ -1122,9 +1197,21 @@ function ContactModal({ data, onClose }) {
                     {data?.plan && (
                       <p className="contact-modal__plan">
                         Тариф: <span>{data.plan}</span>
-                        {data?.price && <b>{data.price}</b>}
+                        {promoPrice && <b>{promoPrice}</b>}
                       </p>
                     )}
+                    {!data?.plan && promoActive && (
+                      <p className="contact-modal__plan">
+                        Промокод: <span>NEON-15</span>
+                        <b>−{formatPrice(PROMO_DISCOUNT)}</b>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="contact-modal__quick">
+                    <span><Check className="w-4 h-4" /> Ответ в течение дня</span>
+                    <span><Check className="w-4 h-4" /> Достаточно имени и телефона</span>
+                    <span><Check className="w-4 h-4" /> Без обязательного брифа</span>
                   </div>
 
                   <PromoInModal rawPrice={data?.rawPrice} />
@@ -1156,15 +1243,14 @@ function ContactModal({ data, onClose }) {
                       />
                     </div>
                     <div className="contact-modal__field">
-                      <label htmlFor="cm-message">О задаче *</label>
+                      <label htmlFor="cm-message">Комментарий</label>
                       <textarea
                         id="cm-message"
                         value={fields.message}
                         onChange={update('message')}
-                        placeholder="Что нужно сделать? Сфера бизнеса, пожелания, примеры..."
-                        required
+                        placeholder="Можно коротко: чем занимаетесь и какой сайт нужен."
                         maxLength={3000}
-                        rows={4}
+                        rows={3}
                       />
                     </div>
 
@@ -1244,7 +1330,7 @@ export default function App() {
       <Terms />
       <FAQ />
       <Footer openModal={openModal} />
-      <FloatingPromo />
+      <FloatingPromo openModal={openModal} />
       <BackToTop />
       <ContactModal data={modalData} onClose={closeModal} />
     </main>
