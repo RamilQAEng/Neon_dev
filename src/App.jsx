@@ -433,7 +433,7 @@ function Hero({ openModal }) {
 
 const statsData = [
   { value: '8+', label: 'Запущенных сайтов' },
-  { value: '7 дн.', label: 'Стартовый срок' },
+  { value: '48 ч', label: 'Стартовый срок' },
   { value: '45К', label: 'Цена старта' },
   { value: '50/50', label: 'Схема оплаты' },
 ];
