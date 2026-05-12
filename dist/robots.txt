@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://neon-dev.ru//sitemap.xml

@@ -320,7 +320,7 @@ function Header({ openModal }) {
 
 function Hero({ openModal }) {
   return (
-    <section id="hero" className="min-h-screen flex flex-col justify-center relative pt-20 overflow-hidden">
+    <section id="hero" className="hero-section min-h-screen flex flex-col justify-center relative pt-20 overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(157,111,255,0.16),transparent_32%),linear-gradient(245deg,rgba(0,255,209,0.12),transparent_30%)]" />
       <div className="absolute inset-0 hero-grid opacity-35" />
       <div className="absolute inset-0 hero-scan opacity-20" />
@@ -329,62 +329,63 @@ function Hero({ openModal }) {
         NEON
       </div>
       <div className="absolute bottom-16 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyber-cyan/35 to-transparent" />
-      <div className="absolute top-[38%] right-10 hidden xl:block w-[360px]">
-        <PromoAnchor />
-      </div>
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="hero-container container mx-auto px-6 relative z-10">
         <div className="absolute top-0 left-6 w-[1px] h-32 bg-gradient-to-b from-cyber-neon to-transparent opacity-50 hidden md:block" />
-        <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex items-center gap-4 mb-8">
-          <div className="h-[2px] w-16 bg-cyber-cyan shadow-cyan" />
-          <span className="font-sub font-bold text-cyber-cyan tracking-[0.3em] text-sm uppercase">Веб-разработка для бизнеса</span>
-        </motion.div>
+        <div className="hero-layout">
+          <div className="hero-copy">
+            <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex items-center gap-4 mb-8">
+              <div className="h-[2px] w-16 bg-cyber-cyan shadow-cyan" />
+              <span className="font-sub font-bold text-cyber-cyan tracking-[0.3em] text-sm uppercase">Веб-разработка для бизнеса</span>
+            </motion.div>
 
-        <div className="relative mb-12">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-header font-black text-4xl md:text-8xl lg:text-9xl leading-[0.95] text-white uppercase tracking-normal"
-          >
-            РАЗРАБОТКА{' '}
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400 relative z-20">
-              САЙТОВ ДЛЯ БИЗНЕСА
-            </span>
-          </motion.h1>
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.45 }}
-            className="mt-8 inline-flex flex-wrap items-center gap-3 border border-cyber-cyan/35 bg-cyber-cyan/10 px-5 py-3 font-sub text-sm md:text-base font-bold uppercase tracking-[0.14em] text-white shadow-cyan"
-          >
-            <span className="text-cyber-cyan">от 45 000 ₽</span>
-            <span className="text-white/45">/</span>
-            <span>фикс, без скрытых доплат</span>
-          </motion.div>
-          <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 0.8 }} className="absolute -bottom-6 left-0 w-2/3 md:w-1/2 h-2 bg-cyber-neon shadow-neon origin-left" />
+            <div className="relative mb-12">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="hero-title font-header font-black text-white uppercase tracking-normal"
+              >
+                РАЗРАБОТКА{' '}
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400 relative z-20">
+                  САЙТОВ ДЛЯ БИЗНЕСА
+                </span>
+              </motion.h1>
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.45 }}
+                className="mt-8 inline-flex flex-wrap items-center gap-3 border border-cyber-cyan/35 bg-cyber-cyan/10 px-5 py-3 font-sub text-sm md:text-base font-bold uppercase tracking-[0.14em] text-white shadow-cyan"
+              >
+                <span className="text-cyber-cyan">от 45 000 ₽</span>
+                <span className="text-white/45">/</span>
+                <span>фикс, без скрытых доплат</span>
+              </motion.div>
+              <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 0.8 }} className="absolute -bottom-6 left-0 w-2/3 md:w-1/2 h-2 bg-cyber-neon shadow-neon origin-left" />
+            </div>
+
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1 }} className="hero-content-row flex flex-col md:flex-row justify-between items-start md:items-end mt-16 gap-10">
+              <div className="max-w-xl">
+                <h2 className="font-sub font-light text-2xl md:text-3xl text-white mb-6 tracking-wide">
+                  БЫСТРЫЙ ЗАПУСК <span className="text-cyber-neon font-bold border-b border-cyber-neon">БЕЗ КОНСТРУКТОРОВ</span>
+                </h2>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto">
+                <button
+                  onClick={() => openModal()}
+                  className="px-7 md:px-8 py-4 bg-cyber-neon text-white font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon hover:shadow-none text-center"
+                >
+                  Получить консультацию
+                </button>
+                <a href="#workflow" className="px-7 md:px-8 py-4 border border-white/20 text-white font-sub font-bold tracking-wider uppercase text-xs md:text-sm hover:border-cyber-cyan hover:text-cyber-cyan transition-all duration-300 flex items-center justify-center bg-cyber-dark/50 backdrop-blur-sm">
+                  Как я работаю
+                </a>
+              </div>
+            </motion.div>
+          </div>
+          <div className="hero-promo hidden xl:block">
+            <PromoAnchor />
+          </div>
         </div>
-
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1 }} className="flex flex-col md:flex-row justify-between items-start md:items-end mt-16 gap-10">
-          <div className="max-w-xl">
-            <h2 className="font-sub font-light text-2xl md:text-3xl text-white mb-6 tracking-wide">
-              САЙТ ПОД КЛЮЧ <span className="text-cyber-neon font-bold border-b border-cyber-neon">ЗА 14 ДНЕЙ</span>
-            </h2>
-            <p className="font-body text-cyber-text text-lg font-light leading-relaxed border-l-4 border-cyber-dark pl-6">
-              Чистый код, без конструкторов, с адаптивом, заявками и настройкой аналитики. Детали уточним в переписке, а на старте сразу понятно по срокам и бюджету.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto">
-            <button
-              onClick={() => openModal()}
-              className="px-7 md:px-8 py-4 bg-cyber-neon text-white font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon hover:shadow-none text-center"
-            >
-              Получить консультацию
-            </button>
-            <a href="#workflow" className="px-7 md:px-8 py-4 border border-white/20 text-white font-sub font-bold tracking-wider uppercase text-xs md:text-sm hover:border-cyber-cyan hover:text-cyber-cyan transition-all duration-300 flex items-center justify-center bg-cyber-dark/50 backdrop-blur-sm">
-              Как я работаю
-            </a>
-          </div>
-        </motion.div>
         <div className="mt-8 xl:hidden">
           <PromoAnchor />
         </div>
