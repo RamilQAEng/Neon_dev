@@ -400,15 +400,15 @@ function Hero({ openModal }) {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1 }} className="flex flex-col md:flex-row justify-between items-start md:items-end mt-16 gap-10">
           <div className="max-w-xl">
             <h2 className="font-sub font-bold text-2xl md:text-3xl text-white mb-5 tracking-wide uppercase">
-              Дизайн, адаптив, форма заявок и запуск
+              Сайт, на который будут звонить клиенты
             </h2>
             <p className="font-body text-cyber-text text-lg font-light leading-relaxed border-l-4 border-cyber-dark pl-6">
-              Без конструктора, подписок и скрытых доплат. Сразу понятно, что входит в работу и сколько стоит старт.
+              Человек быстро понимает, чем вы занимаетесь, почему вам можно доверять и куда нажать, чтобы связаться.
             </p>
             <div className="hero-mobile-points" aria-label="Что входит в сайт">
-              <span><MonitorSmartphone className="w-4 h-4" /> Мобильная версия</span>
-              <span><ShieldCheck className="w-4 h-4" /> Фиксированная цена</span>
-              <span><PhoneCall className="w-4 h-4" /> Заявки и контакты</span>
+              <span><MonitorSmartphone className="w-4 h-4" /> Удобно с телефона</span>
+              <span><ShieldCheck className="w-4 h-4" /> Цена до старта</span>
+              <span><PhoneCall className="w-4 h-4" /> Звонки и заявки</span>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto">
@@ -519,12 +519,12 @@ function Services({ openModal }) {
               <b>pricing.board / 2026</b>
             </div>
             <p>
-              Не три одинаковые карточки, а три разных сценария запуска: промо для старта, лендинг под заявки и сайт компании под несколько услуг.
+              Не три одинаковые карточки, а три разных сценария: первый сайт для старта, лендинг под заявки и сайт компании под несколько услуг.
             </p>
             <div className="pricing-brief__meta">
-              <span>no shop</span>
-              <span>no heavy integrations</span>
-              <span>clean deploy</span>
+              <span>без магазина</span>
+              <span>без сложных интеграций</span>
+              <span>публикация включена</span>
             </div>
           </div>
         </div>
@@ -806,6 +806,13 @@ const accentColors = {
   pink: { bg: 'bg-cyber-pink/10', border: 'border-cyber-pink/30', text: 'text-cyber-pink', avatar: 'bg-cyber-pink text-white' },
 };
 
+const teamExpert = {
+  name: 'Алексей',
+  role: 'ведет запуск и правки сайта',
+  image: '/img/project-manager-portrait.png',
+  text: 'Показываем живого человека рядом с отзывами: он уточняет задачу, собирает материалы и доводит страницу до запуска без длинных брифов.'
+};
+
 function Testimonials() {
   return (
     <section id="testimonials" className="py-24 bg-[#05050e] border-t border-white/5 relative overflow-hidden">
@@ -828,38 +835,58 @@ function Testimonials() {
           </div>
         </div>
 
-        <div className="testimonials-track" aria-label="Отзывы клиентов">
-          {testimonials.map((t, i) => {
-            const colors = accentColors[t.accent];
-            return (
-              <motion.div
-                key={t.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.12 }}
-                className={`tcard border ${colors.border} ${colors.bg}`}
-              >
-                <div className="tcard__stars">
-                  {Array.from({ length: 5 }).map((_, idx) => (
-                    <Star
-                      key={idx}
-                      className={`w-4 h-4 ${idx < t.rating ? `fill-current ${colors.text}` : 'text-white/15'}`}
-                    />
-                  ))}
-                  <span>{t.rating}.0</span>
-                </div>
-                <p className="tcard__quote">"{t.text}"</p>
-                <div className="tcard__author">
-                  <div className={`tcard__avatar ${colors.avatar}`}>{t.initial}</div>
-                  <div>
-                    <strong>{t.name}</strong>
-                    <span>{t.role}</span>
+        <div className="testimonials-layout">
+          <motion.aside
+            className="team-expert"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55 }}
+          >
+            <div className="team-expert__image">
+              <img src={teamExpert.image} alt={`${teamExpert.name}, ${teamExpert.role}`} />
+            </div>
+            <div className="team-expert__body">
+              <span>Наш сотрудник</span>
+              <h3>{teamExpert.name}</h3>
+              <strong>{teamExpert.role}</strong>
+              <p>{teamExpert.text}</p>
+            </div>
+          </motion.aside>
+
+          <div className="testimonials-track" aria-label="Отзывы клиентов">
+            {testimonials.map((t, i) => {
+              const colors = accentColors[t.accent];
+              return (
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.08 }}
+                  className={`tcard border ${colors.border} ${colors.bg}`}
+                >
+                  <div className="tcard__stars">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <Star
+                        key={idx}
+                        className={`w-4 h-4 ${idx < t.rating ? `fill-current ${colors.text}` : 'text-white/15'}`}
+                      />
+                    ))}
+                    <span>{t.rating}.0</span>
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                  <p className="tcard__quote">"{t.text}"</p>
+                  <div className="tcard__author">
+                    <div className={`tcard__avatar ${colors.avatar}`}>{t.initial}</div>
+                    <div>
+                      <strong>{t.name}</strong>
+                      <span>{t.role}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
@@ -918,7 +945,7 @@ function Workflow({ openModal }) {
             </h3>
             <ul className="space-y-4 font-body text-gray-300 text-sm font-medium">
               <li className="flex items-start gap-3 text-white"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Срок и стоимость фиксируем <span className="text-cyber-cyan">до старта</span></span></li>
-              <li className="flex items-start gap-3 text-white"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Чистый код. Мгновенная загрузка.</span></li>
+              <li className="flex items-start gap-3 text-white"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Сайт быстро открывается и удобно смотрится с телефона.</span></li>
               <li className="flex items-start gap-3 text-white"><span className="text-cyber-cyan">✔</span><span>Прямая связь с разработчиком.</span></li>
             </ul>
           </div>
