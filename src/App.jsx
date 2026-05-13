@@ -10,6 +10,7 @@ import {
   CreditCard,
   Eye,
   FileText,
+  Gift,
   Layers3,
   Loader2,
   Menu,
@@ -810,7 +811,7 @@ const teamExpert = {
   name: 'Алексей',
   role: 'ведет запуск и правки сайта',
   image: '/img/project-manager-portrait.png',
-  text: 'Показываем живого человека рядом с отзывами: он уточняет задачу, собирает материалы и доводит страницу до запуска без длинных брифов.'
+  text: 'Помогает быстро собрать задачу, подготовить материалы и довести сайт до запуска без длинных брифов и лишних созвонов.'
 };
 
 function Testimonials() {
@@ -1056,6 +1057,69 @@ function FAQ() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function LandingBonus({ openModal }) {
+  return (
+    <section className="landing-bonus bg-[#070613] border-t border-white/5 relative overflow-hidden">
+      <div className="landing-bonus__word" aria-hidden="true">GIFT</div>
+      <div className="container mx-auto px-6 relative z-10">
+        <motion.div
+          className="landing-bonus__card"
+          initial={{ opacity: 0, y: 22 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.55 }}
+        >
+          <div className="landing-bonus__panel landing-bonus__panel--logo">
+            <div className="landing-bonus__head">
+              <div className="landing-bonus__icon">
+                <Gift className="w-7 h-7" />
+              </div>
+              <div>
+                <span>Бонус к лендингу</span>
+                <h2>Логотип в подарок</h2>
+              </div>
+            </div>
+            <p>
+              При заказе лендинга подготовим простой логотип для первого запуска,
+              чтобы сайт, мессенджеры и реклама выглядели цельно.
+            </p>
+            <button
+              type="button"
+              onClick={() => openModal('Продающий лендинг', '90 000 ₽', 90000)}
+              className="landing-bonus__cta"
+            >
+              Обсудить лендинг <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="landing-bonus__panel landing-bonus__panel--pdf">
+            <div className="landing-bonus__head">
+              <div className="landing-bonus__icon">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <span>PDF-гайд</span>
+                <strong>Что будет после запуска сайта</strong>
+              </div>
+            </div>
+            <p>
+              Короткий файл: что вы получите, как подготовить материалы
+              и как потом улучшать сайт с помощью ИИ.
+            </p>
+            <a
+              href="/gift/neon-guide.pdf"
+              download
+              className="landing-bonus__download"
+            >
+              Скачать PDF <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -1356,6 +1420,7 @@ export default function App() {
       <Workflow openModal={openModal} />
       <Terms />
       <FAQ />
+      <LandingBonus openModal={openModal} />
       <Footer openModal={openModal} />
       <FloatingPromo openModal={openModal} />
       <BackToTop />

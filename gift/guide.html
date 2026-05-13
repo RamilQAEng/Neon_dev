@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Сайт для бизнеса — простой гайд от запуска до развития · NEON DEV</title>
+<style>
+  :root {
+    --ink: #0f172a;
+    --ink-soft: #334155;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --bg: #ffffff;
+    --bg-soft: #f8fafc;
+    --accent: #06b6d4;
+    --accent-2: #7c3aed;
+    --accent-pink: #ec4899;
+    --ok: #16a34a;
+    --warn: #b45309;
+  }
+
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { padding: 0; margin: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 11.5pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .page {
+    max-width: 178mm;
+    margin: 0 auto;
+    padding: 14mm 0 18mm;
+    page-break-after: always;
+  }
+  .page:last-of-type { page-break-after: auto; }
+
+  h1, h2, h3, h4 { color: var(--ink); margin: 0 0 8pt; line-height: 1.2; }
+  h1 { font-size: 32pt; letter-spacing: -0.02em; font-weight: 800; }
+  h2 { font-size: 19pt; letter-spacing: -0.01em; font-weight: 700; margin-top: 0; }
+  h3 { font-size: 13.5pt; font-weight: 700; margin-top: 14pt; }
+  h4 { font-size: 11.5pt; font-weight: 700; margin-top: 10pt; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  p { margin: 0 0 8pt; }
+  ul, ol { margin: 0 0 10pt 0; padding-left: 18pt; }
+  li { margin-bottom: 4pt; }
+  strong { color: var(--ink); }
+  em { font-style: normal; color: var(--accent-2); font-weight: 600; }
+
+  hr.soft { border: 0; border-top: 1px solid var(--line); margin: 14pt 0; }
+
+  /* COVER */
+  .cover {
+    min-height: 250mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10pt;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    font-size: 10pt;
+    color: var(--ink);
+  }
+  .brand-dot {
+    width: 10pt; height: 10pt; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 0 3pt #cffafe;
+  }
+  .cover-title {
+    margin-top: 8mm;
+  }
+  .cover-eyebrow {
+    display: inline-block;
+    padding: 4pt 10pt;
+    border: 1pt solid var(--line);
+    border-radius: 999pt;
+    font-size: 9pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 14pt;
+  }
+  .cover h1 { font-size: 40pt; line-height: 1.04; max-width: 165mm; }
+  .cover .sub {
+    margin-top: 14pt;
+    color: var(--ink-soft);
+    font-size: 14pt;
+    max-width: 160mm;
+    line-height: 1.4;
+  }
+  .cover-bar {
+    margin-top: 18mm;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8mm;
+    padding-top: 10mm;
+    border-top: 1px solid var(--line);
+  }
+  .cover-bar .cell {
+    font-size: 10pt;
+    color: var(--ink-soft);
+  }
+  .cover-bar .cell b { display: block; color: var(--ink); font-size: 12pt; margin-bottom: 3pt; }
+
+  .cover-foot {
+    margin-top: 18mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    color: var(--muted);
+    font-size: 9.5pt;
+  }
+  .cover-foot a { color: var(--accent-2); text-decoration: none; }
+
+  .accent-strip {
+    height: 6pt;
+    border-radius: 3pt;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2) 60%, var(--accent-pink));
+    margin: 10pt 0 14pt;
+    width: 100%;
+  }
+
+  /* TOC */
+  .toc-list { list-style: none; padding: 0; margin: 12pt 0 0; }
+  .toc-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8pt;
+    padding: 6pt 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 11.5pt;
+  }
+  .toc-list .num {
+    color: var(--accent-2);
+    font-weight: 700;
+    width: 26pt;
+    flex: 0 0 26pt;
+  }
+  .toc-list .title { flex: 1; color: var(--ink); }
+  .toc-list .pg { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 10pt; }
+
+  /* Sections */
+  .section-head {
+    display: flex; align-items: center; gap: 10pt;
+    margin-bottom: 6pt;
+  }
+  .section-num {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 28pt; height: 28pt;
+    border-radius: 8pt;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-weight: 800; font-size: 12pt;
+  }
+  .section-lead {
+    color: var(--ink-soft);
+    font-size: 12pt;
+    margin: 0 0 14pt;
+    max-width: 160mm;
+  }
+
+  /* Cards / blocks */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8pt; }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 10pt;
+    padding: 12pt 14pt;
+    background: #fff;
+    page-break-inside: avoid;
+  }
+  .card h4 {
+    margin: 0 0 6pt;
+    color: var(--accent-2);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12pt;
+  }
+  .card p { color: var(--ink-soft); margin: 0; }
+
+  .num-card {
+    border: 1px solid var(--line);
+    border-radius: 10pt;
+    padding: 10pt 12pt;
+    background: var(--bg-soft);
+    display: flex;
+    gap: 10pt;
+    align-items: flex-start;
+    page-break-inside: avoid;
+    margin-bottom: 8pt;
+  }
+  .num-card .n {
+    width: 22pt; height: 22pt; flex: 0 0 22pt;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5pt solid var(--accent);
+    color: var(--accent-2);
+    font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11pt;
+  }
+  .num-card .body { flex: 1; }
+  .num-card h4 { margin: 0 0 4pt; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 12pt; }
+  .num-card p { margin: 0; color: var(--ink-soft); }
+
+  .callout {
+    border-left: 3pt solid var(--accent-2);
+    background: #faf5ff;
+    padding: 10pt 14pt;
+    border-radius: 4pt;
+    margin: 10pt 0;
+    color: var(--ink-soft);
+    page-break-inside: avoid;
+  }
+  .callout b { color: var(--ink); }
+
+  .tip {
+    border-left: 3pt solid var(--accent);
+    background: #ecfeff;
+    padding: 10pt 14pt;
+    border-radius: 4pt;
+    margin: 10pt 0;
+    color: var(--ink-soft);
+    page-break-inside: avoid;
+  }
+
+  .warn {
+    border-left: 3pt solid var(--warn);
+    background: #fffbeb;
+    padding: 10pt 14pt;
+    border-radius: 4pt;
+    margin: 10pt 0;
+    color: var(--ink-soft);
+    page-break-inside: avoid;
+  }
+
+  /* Checklist */
+  .check {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .check li {
+    position: relative;
+    padding: 6pt 0 6pt 26pt;
+    border-bottom: 1px dashed var(--line);
+    color: var(--ink-soft);
+  }
+  .check li:last-child { border-bottom: 0; }
+  .check li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 8pt;
+    width: 14pt; height: 14pt;
+    border: 1.5pt solid var(--accent);
+    border-radius: 4pt;
+    background: #fff;
+  }
+  .check li b { color: var(--ink); }
+
+  /* Prompt block */
+  .prompt {
+    border: 1px solid var(--line);
+    border-radius: 10pt;
+    padding: 12pt 14pt;
+    margin: 8pt 0 14pt;
+    background: #fafafa;
+    page-break-inside: avoid;
+  }
+  .prompt .head {
+    display: flex; align-items: center; gap: 8pt;
+    font-size: 9.5pt; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8pt;
+  }
+  .prompt .tag {
+    display: inline-block;
+    padding: 2pt 8pt;
+    border-radius: 999pt;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .prompt h4 {
+    margin: 0 0 6pt;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12.5pt;
+  }
+  .prompt .desc { color: var(--ink-soft); margin: 0 0 8pt; font-size: 11pt; }
+  .prompt pre {
+    margin: 0;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: 6pt;
+    padding: 10pt 12pt;
+    font-family: "SF Mono", "Menlo", Consolas, "DejaVu Sans Mono", monospace;
+    font-size: 10pt;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.45;
+  }
+
+  /* Timeline */
+  .timeline { margin: 0; padding: 0; list-style: none; }
+  .timeline li {
+    position: relative;
+    padding: 4pt 0 12pt 24pt;
+    border-left: 2pt solid var(--line);
+    margin-left: 6pt;
+  }
+  .timeline li::before {
+    content: "";
+    position: absolute;
+    left: -6pt; top: 8pt;
+    width: 10pt; height: 10pt; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3pt #cffafe;
+  }
+  .timeline li b { display: block; color: var(--ink); margin-bottom: 2pt; }
+  .timeline li span.tag {
+    display: inline-block;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    border-radius: 999pt;
+    padding: 1pt 8pt;
+    font-size: 9pt;
+    margin-bottom: 4pt;
+  }
+
+  /* Final / contact */
+  .final {
+    border: 1px solid var(--line);
+    border-radius: 14pt;
+    padding: 16pt 18pt;
+    background: linear-gradient(135deg, #ecfeff 0%, #f5f3ff 100%);
+    page-break-inside: avoid;
+  }
+  .final h2 { margin-top: 0; }
+  .final .row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8pt;
+    margin-top: 10pt;
+  }
+  .final .row .lbl {
+    font-size: 9.5pt; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 2pt;
+  }
+  .final .row .val { color: var(--ink); font-weight: 600; }
+
+  .footer-note {
+    margin-top: 14pt;
+    color: var(--muted);
+    font-size: 9.5pt;
+    text-align: center;
+  }
+
+  /* Print fine-tuning */
+  @media print {
+    body { background: #fff; }
+    a { color: var(--ink); text-decoration: none; }
+    .no-print { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =================== COVER =================== -->
+<section class="page cover">
+  <div>
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>NEON&nbsp;DEV · ГАЙД ДЛЯ КЛИЕНТА</span>
+    </div>
+
+    <div class="cover-title">
+      <span class="cover-eyebrow">Подарок к запуску сайта</span>
+      <h1>Сайт для бизнеса.<br/>От запуска до развития.</h1>
+      <div class="sub">Что готовить перед запуском, что улучшать после и как использовать ИИ, чтобы сайт продолжал работать на заявки — без переделок и подписок.</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="accent-strip"></div>
+    <div class="cover-bar">
+      <div class="cell"><b>7 разделов</b>Анатомия, подготовка, развитие</div>
+      <div class="cell"><b>7 готовых промптов</b>Для текстов, FAQ, рекламы, постов</div>
+      <div class="cell"><b>3 чек-листа</b>Контент, запуск, метрики</div>
+    </div>
+    <div class="cover-foot">
+      <div>NEON DEV · разработка сайтов под ключ</div>
+      <div><a href="https://neon-dev.ru">neon-dev.ru</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== TOC =================== -->
+<section class="page">
+  <h2>Содержание</h2>
+  <div class="accent-strip" style="max-width:60mm;"></div>
+  <ol class="toc-list" style="list-style:none;">
+    <li><span class="num">01</span><span class="title">Что вы получите после запуска сайта</span><span class="pg">с. 3</span></li>
+    <li><span class="num">02</span><span class="title">Из чего состоит нормальный сайт услуг</span><span class="pg">с. 4</span></li>
+    <li><span class="num">03</span><span class="title">Как подготовить фото, тексты, цены и контакты</span><span class="pg">с. 6</span></li>
+    <li><span class="num">04</span><span class="title">Что улучшать после запуска · план на 30 / 60 / 90 дней</span><span class="pg">с. 8</span></li>
+    <li><span class="num">05</span><span class="title">Как использовать ИИ, чтобы сайт развивался дальше</span><span class="pg">с. 9</span></li>
+    <li><span class="num">06</span><span class="title">7 готовых промптов: тексты, FAQ, реклама, посты</span><span class="pg">с. 10</span></li>
+    <li><span class="num">07</span><span class="title">Метрики, на которые стоит смотреть</span><span class="pg">с. 13</span></li>
+    <li><span class="num">08</span><span class="title">Чек-лист готовности к запуску</span><span class="pg">с. 14</span></li>
+  </ol>
+
+  <div class="callout" style="margin-top:18pt;">
+    <b>Как пользоваться этим гайдом.</b> Это не учебник, а рабочий документ. Откройте разделы 3 и 8 перед запуском — соберите по ним фото, тексты и контакты. Разделы 4–6 пригодятся после запуска: что улучшать и какие задачи решать с помощью ИИ, не нанимая копирайтера.
+  </div>
+</section>
+
+<!-- =================== 01 =================== -->
+<section class="page">
+  <div class="section-head">
+    <div class="section-num">01</div>
+    <h2>Что вы получите после запуска сайта</h2>
+  </div>
+  <p class="section-lead">Сайт — это не только «страница в интернете». Это набор вещей, которые работают вместе. Ниже — что у вас на руках после сдачи проекта.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>Готовый сайт под ключ</h4>
+      <p>Опубликованный на хостинге сайт по вашему домену. Открывается у клиентов так же, как у вас.</p>
+    </div>
+    <div class="card">
+      <h4>Адаптив для телефона</h4>
+      <p>Версия для мобильного — приоритет №1. Большинство клиентов открывают сайт со смартфона.</p>
+    </div>
+    <div class="card">
+      <h4>Юридические страницы</h4>
+      <p>Политика конфиденциальности, согласие на обработку данных, cookies — всё по 152-ФЗ.</p>
+    </div>
+    <div class="card">
+      <h4>Подключенный домен и хостинг</h4>
+      <p>Сайт работает по https, домен ваш, доступы — у вас. Без подписок на конструктор.</p>
+    </div>
+    <div class="card">
+      <h4>Аналитика и формы</h4>
+      <p>Яндекс.Метрика, цели на заявку и клик по тарифу, форма с отправкой на email или в Telegram.</p>
+    </div>
+    <div class="card">
+      <h4>Исходники и инструкция</h4>
+      <p>Код, доступы, краткая инструкция: как поменять текст, цену, фото — без программиста.</p>
+    </div>
+  </div>
+
+  <div class="tip">
+    <b>Что это значит на практике.</b> Сайт можно сразу отправлять клиентам в WhatsApp/Telegram, давать в подпись писем, ставить ссылку в Avito, Яндекс.Карты, профиль ВК и запускать в рекламу через Яндекс.Директ.
+  </div>
+</section>
+
+<!-- =================== 02 =================== -->
+<section class="page">
+  <div class="section-head">
+    <div class="section-num">02</div>
+    <h2>Из чего состоит нормальный сайт услуг</h2>
+  </div>
+  <p class="section-lead">Это «анатомия». На большинстве сайтов услуг — одни и те же блоки, просто разной глубины. Понимать их полезно, чтобы потом самостоятельно решать, что добавить или убрать.</p>
+
+  <div class="num-card">
+    <div class="n">1</div>
+    <div class="body">
+      <h4>Первый экран</h4>
+      <p>Главное обещание: <em>кто вы, что делаете и для кого</em>. Цена «от», крупная кнопка действия, телефон или Telegram. Клиент должен за 5 секунд понять, по адресу ли он попал.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">2</div>
+    <div class="body">
+      <h4>Услуги или тарифы</h4>
+      <p>Что вы продаете, в каких пакетах, с какой ценой или вилкой. Чем понятнее цена — тем меньше «холодных» заявок.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">3</div>
+    <div class="body">
+      <h4>Кейсы или примеры работ</h4>
+      <p>2–6 примеров с фото, коротким описанием и результатом. Не каталог: достаточно показать, что вы реально работаете, а не нарисовали витрину.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">4</div>
+    <div class="body">
+      <h4>Доверие</h4>
+      <p>Отзывы клиентов, гарантии, договор, оплата по карте/безналу, опыт, регалии. Тут люди принимают решение «писать или закрыть вкладку».</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">5</div>
+    <div class="body">
+      <h4>Процесс работы</h4>
+      <p>Как именно проходит работа: что от вас, что от клиента, какие сроки. Убирает страх «а вдруг я что-то не понимаю».</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">6</div>
+    <div class="body">
+      <h4>FAQ — частые вопросы</h4>
+      <p>Ответы на 5–8 вопросов, которые клиенты обычно задают в переписке. Снижает нагрузку на вас и закрывает возражения.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">7</div>
+    <div class="body">
+      <h4>Контакты и форма заявки</h4>
+      <p>Имя + контакт + короткое сообщение. Telegram, WhatsApp, телефон — всё что удобно. Чем короче форма, тем больше заявок.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">8</div>
+    <div class="body">
+      <h4>Юридические страницы</h4>
+      <p>Политика конфиденциальности, согласие на обработку ПД, cookies. Это требование закона и обязательное условие для рекламы.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== 02 continuation -->
+<section class="page">
+  <h3>Что лучше не делать на сайте услуг</h3>
+  <div class="warn">
+    <ul style="margin:0;">
+      <li>Не превращать первый экран в красивую заставку без смысла — клиент должен сразу понять, что вы делаете.</li>
+      <li>Не прятать цену «оставьте заявку и мы сообщим» — это отпугивает тех, кто сравнивает.</li>
+      <li>Не делать длинных форм с 8–10 полями. Имя + контакт + (опционально) задача — достаточно.</li>
+      <li>Не размещать фото из стоков, если у вас есть реальные. Стоки видно сразу.</li>
+      <li>Не писать «мы команда профессионалов с многолетним опытом» — это никому ни о чём не говорит.</li>
+    </ul>
+  </div>
+
+  <h3>Что усиливает доверие на сайте услуг</h3>
+  <div class="tip">
+    <ul style="margin:0;">
+      <li>Реальные фото: вы, ваш кабинет, ваш продукт, ваш процесс.</li>
+      <li>Конкретные числа: «работаю с 2018 года», «более 200 проектов», «средний срок — 5 дней».</li>
+      <li>Понятные гарантии: «правки бесплатно 14 дней», «возврат, если не подойдёт», «договор и чек».</li>
+      <li>Контакты, по которым реально отвечают: Telegram, WhatsApp, номер.</li>
+      <li>Ссылки на отзывы во внешних источниках (карты, Avito, Яндекс.Услуги) — там их сложнее «нарисовать».</li>
+    </ul>
+  </div>
+</section>
+
+<!-- =================== 03 =================== -->
+<section class="page">
+  <div class="section-head">
+    <div class="section-num">03</div>
+    <h2>Как подготовить фото, тексты, цены и контакты</h2>
+  </div>
+  <p class="section-lead">Самая частая причина задержки запуска — не код, а контент. Если вы соберете эти 4 вещи заранее, сайт уйдёт в продакшн в обещанные сроки.</p>
+
+  <h3>Фото</h3>
+  <ul class="check">
+    <li><b>Реальные снимки</b> вас, продукта, процесса или результата. Хотя бы 6–10 шт.</li>
+    <li><b>Горизонтальные</b> для первого экрана и кейсов, <b>вертикальные</b> для блока «о нас».</li>
+    <li>Размер: <b>от 1500 px по длинной стороне</b>, без рамок и водяных знаков чужих сервисов.</li>
+    <li>Без коллажей и текста поверх фото — заголовки добавим в самом сайте.</li>
+    <li>Стоковые фото — крайняя мера. Лучше одно своё, чем десять с фотобанков.</li>
+  </ul>
+
+  <h3>Тексты</h3>
+  <div class="callout">
+    <b>Простая формула для услуги:</b><br/>
+    1) что именно вы делаете (одно предложение) → 2) для кого → 3) что человек получает в результате → 4) сколько это стоит и сколько занимает по времени → 5) что делать дальше (написать, позвонить, оставить заявку).
+  </div>
+  <ul class="check">
+    <li><b>Описания услуг</b> — по 3–6 предложений на каждую.</li>
+    <li><b>«О компании / о себе»</b> — короткий абзац: кто, опыт, что важно для клиента (не для вас).</li>
+    <li><b>Преимущества</b> — 4–6 пунктов фактами: «работаю по договору», «гарантия 14 дней», «оплата картой и безналу».</li>
+    <li><b>FAQ</b> — 5–8 реальных вопросов, которые вам задают в переписке. Ответы — как объяснили бы лично.</li>
+  </ul>
+
+  <h3>Цены</h3>
+  <ul class="check">
+    <li>Если цена фиксированная — пишите цифру. «Маникюр — 2 200 ₽».</li>
+    <li>Если зависит от объема — вилка: «От 45 000 до 130 000 ₽».</li>
+    <li>Если индивидуально — укажите минимум: «От 5 000 ₽» + «итог — после короткого разговора».</li>
+    <li>Прячьте цену только если за этим есть реальная причина — «холодных» заявок от этого больше не становится.</li>
+  </ul>
+
+  <h3>Контакты</h3>
+  <ul class="check">
+    <li><b>Телефон</b> — кликабельный, чтобы с мобильного звонить в одно касание.</li>
+    <li><b>Telegram и/или WhatsApp</b> — основной канал переписки.</li>
+    <li><b>Email</b> — лучше отдельный, не личный. Например, hello@вашсайт.ру.</li>
+    <li><b>Адрес</b>, если есть офис или кабинет. Если работаете онлайн — так и пишите.</li>
+    <li><b>Время работы</b> — когда вы реально отвечаете, не «24/7», если это неправда.</li>
+  </ul>
+</section>
+
+<!-- =================== 04 =================== -->
+<section class="page">
+  <div class="section-head">
+    <div class="section-num">04</div>
+    <h2>Что улучшать после запуска · план на 30 / 60 / 90 дней</h2>
+  </div>
+  <p class="section-lead">Сайт — не «нарисовали и забыли». Это инструмент, который вы постепенно подкручиваете под клиентов, рекламу и сезон. План ниже — что делать по неделям.</p>
+
+  <ul class="timeline">
+    <li>
+      <span class="tag">1–7 дней</span>
+      <b>Проверка реальности</b>
+      Открыть сайт с чужого телефона. Пройти путь клиента до заявки. Проверить, что письма с формы реально доходят. Запустить Яндекс.Метрику и убедиться, что цели срабатывают.
+    </li>
+    <li>
+      <span class="tag">2–4 недели</span>
+      <b>Слушаем клиентов</b>
+      Записать все вопросы, которые клиенты задают после сайта. Эти вопросы → в блок FAQ. Записать причины отказов → в блок «Почему мы».
+    </li>
+    <li>
+      <span class="tag">30–45 дней</span>
+      <b>Первая правка контента</b>
+      Поменять тексты там, где видно, что клиенты «не догоняют». Добавить 1–2 свежих кейса. Обновить цены, если поменялись.
+    </li>
+    <li>
+      <span class="tag">45–60 дней</span>
+      <b>Расширение</b>
+      Добавить новую услугу, если появилась. Добавить отзывы из мессенджеров (с разрешением). Подключить онлайн-чат, если поток заявок вырос.
+    </li>
+    <li>
+      <span class="tag">60–90 дней</span>
+      <b>SEO и реклама</b>
+      Проверить, по каким запросам приходят люди. Дописать тексты под эти запросы. Подключить или докрутить рекламу.
+    </li>
+    <li>
+      <span class="tag">каждый квартал</span>
+      <b>Аудит</b>
+      Посмотреть конкурентов, обновить фото, проверить устаревшие тексты. Сайт «дышит» вместе с бизнесом — за год обычно меняется 20–30 % контента.
+    </li>
+  </ul>
+</section>
+
+<!-- =================== 05 =================== -->
+<section class="page">
+  <div class="section-head">
+    <div class="section-num">05</div>
+    <h2>Как использовать ИИ, чтобы сайт развивался дальше</h2>
+  </div>
+  <p class="section-lead">Большую часть контентных задач после запуска сайта можно делать самому с помощью ИИ-помощников: ChatGPT, Claude, GigaChat, YandexGPT и других. Это не магия — это просто текстовый собеседник, которому нужно правильно поставить задачу.</p>
+
+  <h3>Что хорошо делегировать ИИ</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h4>Тексты для сайта</h4>
+      <p>Описания услуг, блок «о компании», тексты для нового раздела, переписать «канцелярит» на человеческий язык.</p>
+    </div>
+    <div class="card">
+      <h4>FAQ и ответы на возражения</h4>
+      <p>Сформулировать вопросы, которые волнуют клиента, и дать на них чёткие короткие ответы.</p>
+    </div>
+    <div class="card">
+      <h4>Заголовки и офферы</h4>
+      <p>Варианты заголовков под рекламу в Яндекс.Директе, для шапки сайта или поста в соцсетях.</p>
+    </div>
+    <div class="card">
+      <h4>Посты для соцсетей</h4>
+      <p>Короткие посты для Telegram, ВК, Дзена под анонс услуги, акции, кейса или сезонного оффера.</p>
+    </div>
+    <div class="card">
+      <h4>Письма и ответы</h4>
+      <p>Письмо клиенту после заявки, ответ на отзыв, шаблон рассылки, прайс-лист в письме.</p>
+    </div>
+    <div class="card">
+      <h4>Сценарии и скрипты</h4>
+      <p>Что говорить в первой переписке, какие вопросы задать перед сделкой, как закрыть возражения.</p>
+    </div>
+  </div>
+
+  <h3>Базовые правила, чтобы ИИ давал нормальный результат</h3>
+  <ol>
+    <li><b>Расскажите контекст.</b> Кто вы, для кого пишете, какой тон. «Я косметолог, работаю в Балашихе, клиентки — женщины 30–50, тон спокойный, без пафоса».</li>
+    <li><b>Дайте пример того, что вам нравится.</b> Вставьте кусок текста с другого сайта или из своей переписки.</li>
+    <li><b>Скажите, что НЕ нужно.</b> «Без слов "инновационный", "профессиональный", "команда экспертов"».</li>
+    <li><b>Просите несколько вариантов.</b> «Дай 5 вариантов» — потом выбираете лучший.</li>
+    <li><b>Уточняйте.</b> Если не нравится — скажите чем и попросите переписать. ИИ — это диалог, а не торговый автомат.</li>
+  </ol>
+
+  <div class="tip">
+    <b>Главное:</b> ИИ хорошо переписывает и предлагает варианты, но <b>не знает</b> ваш бизнес. Финальную правку всегда делайте сами — добавляйте детали, реальные цифры, имена клиентов, особенности города. Без этого получится «средний» текст, как у всех.
+  </div>
+</section>
+
+<!-- =================== 06 PROMPTS =================== -->
+<section class="page">
+  <div class="section-head">
+    <div class="section-num">06</div>
+    <h2>7 готовых промптов</h2>
+  </div>
+  <p class="section-lead">Скопируйте, замените куски в [квадратных скобках] на свои детали и вставьте в любой ИИ-чат. Этого хватает на 90 % текстовых задач после запуска сайта.</p>
+
+  <div class="prompt">
+    <div class="head"><span class="tag">01</span><span>Описание услуги</span></div>
+    <h4>Сделать описание услуги для сайта</h4>
+    <p class="desc">Когда нужно: вы добавляете новую услугу или хотите переписать старую.</p>
+    <pre>Ты помогаешь мне написать описание услуги для сайта.
+
+Контекст:
+— я [кто вы: косметолог / автосервис / строитель и т.п.]
+— услуга: [название услуги]
+— что входит: [3–5 пунктов своими словами]
+— цена: [от ... ₽ / фикс / индивидуально]
+— клиенты обычно: [женщины 30–50 / владельцы авто / молодые пары и т.п.]
+— тон: спокойный, без рекламных штампов, без слов «инновационный», «профессиональный», «команда экспертов»
+
+Сделай:
+1) короткое описание (3–5 предложений) для блока услуги на сайте;
+2) 1 заголовок-обещание для этого блока (до 8 слов);
+3) маркированный список «что входит» из 4–6 пунктов простым языком.
+
+Дай 2 варианта.</pre>
+  </div>
+
+  <div class="prompt">
+    <div class="head"><span class="tag">02</span><span>FAQ</span></div>
+    <h4>Собрать блок «частые вопросы»</h4>
+    <p class="desc">Когда нужно: клиенты задают одни и те же вопросы в переписке.</p>
+    <pre>Я [кто вы] и продаю [услугу]. Помоги собрать блок FAQ для сайта.
+
+Реальные вопросы, которые мне задают:
+1) [вопрос 1]
+2) [вопрос 2]
+3) [вопрос 3]
+4) [вопрос 4]
+5) [вопрос 5]
+
+Перепиши эти вопросы так, как клиент мог бы их искать или сформулировать на сайте,
+и дай чёткий короткий ответ (2–4 предложения) на каждый.
+Тон — как будто я объясняю лично, без канцелярита.</pre>
+  </div>
+
+  <div class="prompt">
+    <div class="head"><span class="tag">03</span><span>Реклама</span></div>
+    <h4>10 заголовков для рекламы</h4>
+    <p class="desc">Когда нужно: запускаете Яндекс.Директ, нужны варианты для тестов.</p>
+    <pre>Помоги придумать заголовки для рекламы в Яндекс.Директе.
+
+Услуга: [что продаёте]
+Город: [город]
+Аудитория: [кто покупает]
+Преимущества: [3 главных факта — цена, срок, гарантия, опыт]
+
+Дай 10 заголовков длиной до 35 символов:
+— 3 заголовка через цену («от ... ₽»);
+— 3 через выгоду для клиента;
+— 2 через срок («за 2 дня», «сегодня»);
+— 2 через вопрос («Нужен ...?»).
+
+Заголовки должны быть конкретными, без слов «лучший», «номер один», «инновационный».</pre>
+  </div>
+
+  <div class="prompt">
+    <div class="head"><span class="tag">04</span><span>Соцсети</span></div>
+    <h4>Пост в Telegram / ВК про услугу</h4>
+    <p class="desc">Когда нужно: анонс новой услуги, акции или кейса.</p>
+    <pre>Напиши пост для [Telegram / ВК / Дзена].
+
+Тема: [новая услуга / акция / кейс / сезонный оффер]
+Контекст: [2–3 предложения, что произошло и зачем рассказать]
+Аудитория: [кто читает канал]
+Тон: [дружелюбный / экспертный / разговорный]
+Длина: 5–8 предложений.
+
+Структура:
+1) зацепка в первой строке (без «друзья!», «привет всем»);
+2) суть в 2–3 предложениях;
+3) польза или результат для клиента;
+4) призыв (написать, забронировать, посмотреть).
+
+В конце — 3 варианта призыва на выбор.</pre>
+  </div>
+</section>
+
+<!-- promts continuation -->
+<section class="page">
+  <div class="prompt">
+    <div class="head"><span class="tag">05</span><span>Письмо клиенту</span></div>
+    <h4>Письмо/сообщение клиенту после заявки</h4>
+    <p class="desc">Когда нужно: автоматизировать первый ответ после формы или звонка.</p>
+    <pre>Помоги написать короткое сообщение клиенту, который оставил заявку на сайте.
+
+Я: [кто вы и что продаёте]
+Что клиент хочет: [услуга / запрос]
+Что я предлагаю на следующем шаге: [короткий созвон / встречу / расчёт / прайс]
+
+Сделай 2 варианта сообщения:
+1) для Telegram/WhatsApp — короткое, до 5 строк, без формальности;
+2) для email — чуть длиннее, с обращением по имени и подписью.
+
+Без слов «уважаемый», «благодарим за обращение», «в кратчайшие сроки».</pre>
+  </div>
+
+  <div class="prompt">
+    <div class="head"><span class="tag">06</span><span>Ответ на отзыв</span></div>
+    <h4>Ответ на отзыв (хороший или плохой)</h4>
+    <p class="desc">Когда нужно: ответить на отзыв в Яндекс.Картах, Avito, 2ГИС, ВК.</p>
+    <pre>Помоги написать ответ на отзыв.
+
+Тип отзыва: [положительный / негативный / нейтральный]
+Текст отзыва: «[вставить отзыв клиента]»
+Что я хочу донести в ответе:
+— [например: спасибо за подробный отзыв]
+— [например: проблема такая-то, мы её решили / решим]
+— [например: будем рады видеть снова]
+
+Дай 2 варианта ответа: короткий (2–3 предложения) и развёрнутый (4–6 предложений).
+Тон: спокойный, без оправданий и без «мы стремимся стать лучше».
+Если отзыв негативный — без обвинений в адрес клиента.</pre>
+  </div>
+
+  <div class="prompt">
+    <div class="head"><span class="tag">07</span><span>Переписать текст</span></div>
+    <h4>Переписать текст «по-человечески»</h4>
+    <p class="desc">Когда нужно: у вас есть текст со старого сайта или из коммерческого предложения, и он звучит как из методички.</p>
+    <pre>Перепиши этот текст для сайта так, чтобы он звучал понятно и по-человечески.
+
+Текст:
+«[вставить исходный текст]»
+
+Контекст:
+— это блок [услуги / о компании / преимущества] на сайте;
+— моя аудитория: [кто читает];
+— я хочу, чтобы клиент после чтения понял: [главная мысль].
+
+Требования:
+— короткие предложения, простые слова;
+— без слов «инновационный», «качественный», «индивидуальный подход»,
+  «команда профессионалов», «широкий спектр услуг»;
+— факты вместо обещаний (числа, сроки, гарантии);
+— длина — примерно как у исходного текста.
+
+Дай 2 варианта на выбор и кратко объясни, чем они отличаются.</pre>
+  </div>
+
+  <div class="tip" style="margin-top:14pt;">
+    <b>Совет.</b> Сохраните этот гайд в Telegram или в заметках. Когда вам нужно будет быстро что-то написать — открыли, скопировали промпт, подставили детали. Это быстрее, чем каждый раз заново объяснять задачу ИИ.
+  </div>
+</section>
+
+<!-- =================== 07 METRICS =================== -->
+<section class="page">
+  <div class="section-head">
+    <div class="section-num">07</div>
+    <h2>Метрики, на которые стоит смотреть</h2>
+  </div>
+  <p class="section-lead">Не нужно становиться маркетологом. Достаточно раз в неделю заходить в Яндекс.Метрику и смотреть 5 простых цифр. Они скажут, что с сайтом всё ок — или где он «течёт».</p>
+
+  <div class="num-card">
+    <div class="n">1</div>
+    <div class="body">
+      <h4>Посетители за неделю</h4>
+      <p>Сколько людей зашло на сайт. Полезно сравнивать неделю к неделе: цифра растёт, падает или стоит на месте.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">2</div>
+    <div class="body">
+      <h4>Откуда они пришли</h4>
+      <p>Поиск, реклама, соцсети, прямые заходы. Если основной канал просел — туда и смотреть в первую очередь.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">3</div>
+    <div class="body">
+      <h4>Заявки (цель lead_sent)</h4>
+      <p>Сколько форм отправлено за период. Это главная цифра — всё остальное служит ей.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">4</div>
+    <div class="body">
+      <h4>Конверсия в заявку</h4>
+      <p>Заявки ÷ посетители × 100. Нормально для сайтов услуг — 1–4 %. Меньше 1 % — есть что чинить.</p>
+    </div>
+  </div>
+
+  <div class="num-card">
+    <div class="n">5</div>
+    <div class="body">
+      <h4>Время на сайте и отказы</h4>
+      <p>Если люди уходят за 5–10 секунд — значит, первый экран не цепляет или ожидание не совпадает с реальностью.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>Простая привычка.</b> Раз в неделю — открыли Метрику, посмотрели эти 5 цифр, записали себе в заметки. Через месяц видно тренд: где растём, где проседаем. Этого хватает, чтобы принимать решения, не нанимая аналитика.
+  </div>
+</section>
+
+<!-- =================== 08 CHECKLIST =================== -->
+<section class="page">
+  <div class="section-head">
+    <div class="section-num">08</div>
+    <h2>Чек-лист готовности к запуску</h2>
+  </div>
+  <p class="section-lead">Распечатайте эту страницу и идите по пунктам. Если все галочки стоят — сайт готов к запуску и можно вкладываться в трафик.</p>
+
+  <h4>Контент</h4>
+  <ul class="check">
+    <li><b>6–10 фото</b> от вас (не сток), горизонтальные и вертикальные</li>
+    <li><b>Описание услуг</b> — по 3–6 предложений на каждую</li>
+    <li><b>Цены</b> или вилка цен по каждой услуге</li>
+    <li><b>Блок «о компании / о себе»</b> в 1 абзац</li>
+    <li><b>3–6 примеров работ</b> с короткими подписями</li>
+    <li><b>5–8 вопросов в FAQ</b> + ответы</li>
+  </ul>
+
+  <h4>Контакты</h4>
+  <ul class="check">
+    <li>Телефон с возможностью звонка с мобильного</li>
+    <li>Telegram или WhatsApp — основной мессенджер</li>
+    <li>Email (лучше отдельный, не личный)</li>
+    <li>Адрес офиса/кабинета или пометка «работаю онлайн»</li>
+    <li>Реальное время работы</li>
+  </ul>
+
+  <h4>Юридическая часть</h4>
+  <ul class="check">
+    <li>Политика конфиденциальности (есть в проекте)</li>
+    <li>Согласие на обработку персональных данных (есть в проекте)</li>
+    <li>Политика cookies (есть в проекте)</li>
+    <li>Реквизиты ИП/ООО, если есть, для подвала сайта</li>
+  </ul>
+
+  <h4>После запуска</h4>
+  <ul class="check">
+    <li>Проверили заявку с чужого телефона — письмо дошло</li>
+    <li>Подключена Яндекс.Метрика, цель lead_sent срабатывает</li>
+    <li>Ссылка на сайт добавлена в подписи писем, в карты, в Avito, в профили соцсетей</li>
+    <li>Сохранены доступы к домену, хостингу, метрике, почте</li>
+    <li>Назначен день недели, в который вы смотрите метрики</li>
+  </ul>
+</section>
+
+<!-- =================== FINAL =================== -->
+<section class="page">
+  <div class="final">
+    <span class="cover-eyebrow">Финал</span>
+    <h2>Запустили сайт — отлично. Дальше — самое интересное.</h2>
+    <p style="color:var(--ink-soft); font-size:12pt; max-width:155mm;">
+      Сайт — это не конечная точка, а старт. С этим гайдом вы можете сами обновлять тексты, добавлять блоки, отвечать клиентам и развивать сайт без подрядчика. Если в какой-то момент захочется сделать большой шаг — расширить сайт, переделать первый экран, добавить новые страницы или подключить чат с ИИ — напишите, обсудим.
+    </p>
+
+    <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div>
+        <div class="lbl">Сайт</div>
+        <div class="val">neon-dev.ru</div>
+      </div>
+      <div>
+        <div class="lbl">Telegram</div>
+        <div class="val">указан в подвале сайта</div>
+      </div>
+      <div>
+        <div class="lbl">Почта для заявок</div>
+        <div class="val">через форму на сайте</div>
+      </div>
+    </div>
+
+    <div class="accent-strip" style="margin-top:18pt;"></div>
+
+    <p style="color:var(--ink-soft); margin:0;">
+      <b>Спасибо, что выбрали NEON DEV.</b> Этот гайд — наш способ сказать: сайт у вас на руках, инструкция к нему — тоже. Используйте, делитесь, возвращайтесь.
+    </p>
+  </div>
+
+  <div class="footer-note">
+    © NEON DEV · Гайд для клиента, версия 1.0 · документ можно свободно использовать
+  </div>
+</section>
+
+</body>
+</html>
