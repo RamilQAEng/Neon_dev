@@ -5,86 +5,142 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  color: #E0E0E0;
+  color: #1f2937;
   background:
-    radial-gradient(circle at 15% 10%, rgba(157, 111, 255, 0.18), transparent 34%),
-    radial-gradient(circle at 85% 65%, rgba(0, 255, 209, 0.12), transparent 28%),
-    #0A091A;
-  font-family: Inter, sans-serif;
+    radial-gradient(circle at 15% 10%, rgba(37, 99, 235, 0.08), transparent 38%),
+    radial-gradient(circle at 85% 75%, rgba(15, 118, 110, 0.06), transparent 32%),
+    linear-gradient(180deg, #fffdfa 0%, #f6f4ef 46%, #eef3f7 100%);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 .legal-page {
-  max-width: 980px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 56px 22px 96px;
+  padding: 48px 22px 96px;
 }
 
 .legal-page__back {
   display: inline-flex;
-  margin-bottom: 42px;
-  color: #00FFD1;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 36px;
+  padding: 10px 16px;
+  color: #2563eb;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 999px;
   font-family: Montserrat, sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   text-decoration: none;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.legal-page__back:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+  transform: translateY(-1px);
 }
 
 .legal-page__kicker {
-  color: #00FFD1;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #0f766e;
   font-family: Montserrat, sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.32em;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
+}
+
+.legal-page__kicker::before {
+  content: "";
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.55;
 }
 
 .legal-page h1 {
-  margin: 16px 0 28px;
-  color: #fff;
+  margin: 14px 0 32px;
+  color: #0f172a;
   font-family: Montserrat, sans-serif;
-  font-size: clamp(40px, 7vw, 78px);
-  line-height: 0.95;
+  font-size: clamp(34px, 6vw, 60px);
+  line-height: 1.05;
   font-weight: 900;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
 }
 
 .legal-page h1 span {
-  color: #9D6FFF;
+  color: #2563eb;
 }
 
 .legal-page__panel {
-  padding: clamp(24px, 5vw, 44px);
-  background: rgba(17, 14, 35, 0.76);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 28px rgba(157, 111, 255, 0.1);
+  padding: clamp(24px, 4vw, 40px);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
 }
 
 .legal-page h2 {
-  margin: 30px 0 12px;
-  color: #fff;
+  margin: 32px 0 12px;
+  color: #0f172a;
   font-family: Montserrat, sans-serif;
   font-size: 22px;
   font-weight: 800;
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.legal-page h2:first-of-type {
+  margin-top: 24px;
 }
 
 .legal-page p {
   margin: 0 0 16px;
-  color: #c8c8d6;
-  font-size: 16px;
-  line-height: 1.75;
+  color: #475569;
+  font-size: 17px;
+  line-height: 1.7;
 }
 
 .legal-page strong {
-  color: #fff;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.legal-page a {
+  color: #2563eb;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.3);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.legal-page a:hover {
+  color: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 .legal-page__note {
   margin-top: 32px !important;
-  padding: 18px;
-  color: #00FFD1 !important;
-  background: rgba(0, 255, 209, 0.08);
-  border-left: 3px solid #00FFD1;
+  padding: 16px 20px !important;
+  color: #0f766e !important;
+  background: #ecfeff !important;
+  border-left: 3px solid #0f766e !important;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .legal-page { padding: 36px 18px 64px; }
+  .legal-page__panel { padding: 22px; }
+  .legal-page h2 { font-size: 20px; }
+  .legal-page p { font-size: 16px; }
+  body { font-size: 16px; }
 }

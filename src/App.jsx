@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -71,6 +71,7 @@ const PROMO_DURATION_MS = 15 * 60 * 1000;
 const PROMO_STORAGE_KEY = 'neonPromoExpiresAt';
 const PROMO_EVENT = 'neon-promo-activated';
 const PROMO_DISCOUNT = 15000;
+const COOKIE_CONSENT_KEY = 'neonCookieConsent';
 
 function scrollToId(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -87,15 +88,38 @@ function formatPrice(amount) {
   return amount.toLocaleString('ru-RU') + ' ₽';
 }
 
+function safeStorageGet(key) {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function trackGoal(goal, payload) {
+  if (typeof window.ym === 'function') {
+    window.ym(109145693, 'reachGoal', goal, payload);
+  }
+}
+
 function activatePromoCode() {
   const nextExpiresAt = Date.now() + PROMO_DURATION_MS;
-  window.localStorage.setItem(PROMO_STORAGE_KEY, String(nextExpiresAt));
+  safeStorageSet(PROMO_STORAGE_KEY, String(nextExpiresAt));
   window.dispatchEvent(new CustomEvent(PROMO_EVENT, { detail: { expiresAt: nextExpiresAt } }));
   return nextExpiresAt;
 }
 
 function ensurePromoCode() {
-  const stored = Number(window.localStorage.getItem(PROMO_STORAGE_KEY));
+  const stored = Number(safeStorageGet(PROMO_STORAGE_KEY));
   if (stored > Date.now()) return stored;
   return activatePromoCode();
 }
@@ -160,7 +184,7 @@ function PromoAnchor({ openModal }) {
       </div>
       <div className="promo-anchor__value">
         <span>-15 000 ₽</span>
-        <small>на запуск сайта под ключ</small>
+        <small>на запуск сайта под ключ при заявке с сайта</small>
       </div>
       <button
         onClick={() => openModal('Проект с промокодом NEON-15', 'скидка 15 000 ₽')}
@@ -200,7 +224,7 @@ function FloatingPromo({ openModal }) {
           <AnimatePresence>
             {open && (
               <motion.div
-                className="floating-promo-card"
+                className="floating-promo-card floating-promo-card--open"
                 initial={{ opacity: 0, y: 10, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.96 }}
@@ -218,7 +242,7 @@ function FloatingPromo({ openModal }) {
                     openModal('Проект с промокодом NEON-15', 'скидка 15 000 ₽');
                   }}
                 >
-                  Заказать со скидкой <ArrowRight className="w-4 h-4" />
+                  Обсудить со скидкой <ArrowRight className="w-4 h-4" />
                 </button>
               </motion.div>
             )}
@@ -227,7 +251,7 @@ function FloatingPromo({ openModal }) {
           <button
             type="button"
             onClick={() => { ensurePromoCode(); setOpen((value) => !value); }}
-            className={`floating-promo ${active ? 'floating-promo--active' : ''}`}
+            className={`floating-promo ${active ? 'floating-promo--active' : ''} ${open ? 'floating-promo--open' : ''}`}
             aria-label="Показать промокод NEON-15 на скидку 15 000 рублей"
             aria-expanded={open}
           >
@@ -236,7 +260,7 @@ function FloatingPromo({ openModal }) {
             </span>
             <span className="floating-promo__copy">
               <b>{formatPromoTime(remaining)}</b>
-              <small>акция</small>
+              <small>NEON-15</small>
             </span>
           </button>
         </motion.div>
@@ -265,24 +289,24 @@ function PromoInModal({ rawPrice }) {
               <strong className="promo-in-modal__new">от {formatPrice(discounted)}</strong>
             </>
           ) : (
-            <span className="promo-in-modal__hint">Активируй и сэкономь <b>−15 000 ₽</b> на этом тарифе</span>
+            <span className="promo-in-modal__hint">Промокод NEON-15 дает <b>−15 000 ₽</b> на этом тарифе</span>
           )}
         </div>
       ) : (
         <div className="promo-in-modal__price">
-          <span className="promo-in-modal__hint">Скидка <b>−15 000 ₽</b> на любой тариф</span>
+          <span className="promo-in-modal__hint">Промокод NEON-15: <b>−15 000 ₽</b> на запуск сайта</span>
         </div>
       )}
 
       {active ? (
         <div className="promo-in-modal__timer">
           <Timer className="w-3.5 h-3.5" />
-          <span>Скидка зафиксирована — осталось {formatPromoTime(remaining)}</span>
+          <span>Промокод закреплен за заявкой — осталось {formatPromoTime(remaining)}</span>
         </div>
       ) : (
         <button onClick={ensurePromoCode} className="promo-in-modal__activate">
           <Zap className="w-3.5 h-3.5" />
-          Активировать скидку −15 000 ₽
+          Активировать NEON-15
         </button>
       )}
     </div>
@@ -301,43 +325,42 @@ function Header({ openModal }) {
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-cyber-bg/95 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-8'}`}>
+    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-xl border-b border-slate-200 py-4' : 'bg-transparent py-8'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center">
         <button onClick={() => scrollToId('hero')} className="flex items-center gap-3 group" aria-label="Наверх">
           <div className="w-12 h-12 flex items-center justify-center border border-cyber-neon/50 bg-cyber-neon/10 rounded-sm group-hover:shadow-neon transition-all duration-300">
             <Zap className="text-cyber-neon w-6 h-6" />
           </div>
           <div className="flex flex-col text-left">
-            <span className="font-header font-black text-xl leading-none tracking-wide text-white">NEON</span>
-            <span className="font-sub text-xs font-bold tracking-[0.2em] text-cyber-cyan mt-1">DESIGN</span>
+            <span className="font-header font-black text-xl leading-none text-slate-900">САЙТЫ</span>
+            <span className="font-sub text-xs font-bold tracking-[0.2em] text-cyber-cyan mt-1">ДЛЯ БИЗНЕСА</span>
           </div>
         </button>
 
         <div className="hidden md:flex items-center gap-10">
           {navItems.map(([label, href]) => (
-            <a key={href} href={href} className="font-sub text-xs font-bold tracking-widest text-gray-300 hover:text-white transition-colors relative group py-2">
+            <a key={href} href={href} className="font-sub text-sm font-bold text-slate-700 hover:text-slate-900 transition-colors py-2">
               {label}
-              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-cyber-neon group-hover:w-full transition-all duration-300" />
             </a>
           ))}
           <button
             onClick={() => openModal()}
             className="ml-6 px-8 py-3 border border-cyber-neon text-cyber-neon font-header font-bold tracking-wider text-sm hover:bg-cyber-neon hover:text-white hover:shadow-neon transition-all duration-300 uppercase"
           >
-            Обсудить проект
+            Обсудить сайт
           </button>
         </div>
 
-        <button className="md:hidden text-white p-2" onClick={() => setOpen(!open)} aria-label="Открыть меню">
+        <button className="md:hidden text-slate-900 p-2" onClick={() => setOpen(!open)} aria-label="Открыть меню">
           {open ? <X /> : <Menu />}
         </button>
       </div>
 
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="absolute top-full left-0 w-full bg-cyber-dark border-b border-white/10 md:hidden flex flex-col p-8 gap-8 shadow-2xl">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="absolute top-full left-0 w-full bg-white border-b border-slate-200 md:hidden flex flex-col p-8 gap-8 shadow-2xl">
             {navItems.map(([label, href]) => (
-              <a key={href} href={href} onClick={() => setOpen(false)} className="font-header font-bold text-xl text-white hover:text-cyber-neon transition-colors tracking-wide">
+              <a key={href} href={href} onClick={() => setOpen(false)} className="font-header font-bold text-xl text-slate-900 hover:text-cyber-neon transition-colors tracking-wide">
                 {label}
               </a>
             ))}
@@ -345,7 +368,7 @@ function Header({ openModal }) {
               onClick={() => { setOpen(false); openModal(); }}
               className="w-full py-4 bg-cyber-neon text-white font-bold uppercase tracking-widest"
             >
-              Обсудить проект
+              Обсудить сайт
             </button>
           </motion.div>
         )}
@@ -357,91 +380,94 @@ function Header({ openModal }) {
 function Hero({ openModal }) {
   return (
     <section id="hero" className="min-h-screen flex flex-col justify-center relative pt-20 overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(37,99,235,0.18),transparent_36%),linear-gradient(245deg,rgba(34,197,94,0.12),transparent_32%)]" />
-      <div className="absolute inset-0 hero-grid opacity-25" />
-      <div className="absolute -top-20 right-0 w-[58vw] h-[120vh] bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(34,197,94,0.08)_42%,transparent_43%)] skew-x-[-14deg] opacity-70" />
-      <div className="absolute top-24 right-[-6rem] hidden lg:block font-header font-black text-[12rem] xl:text-[17rem] leading-none text-white/[0.035] uppercase select-none">
-        SITE
-      </div>
-      <div className="absolute top-[38%] right-10 hidden xl:block w-[360px]">
-        <PromoAnchor openModal={openModal} />
-      </div>
+      <div className="hero-soft-bg absolute inset-0" />
       <div className="container mx-auto px-6 relative z-10">
-        <div className="absolute top-0 left-6 w-[1px] h-32 bg-gradient-to-b from-cyber-neon to-transparent opacity-50 hidden md:block" />
-        <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex items-center gap-4 mb-8">
-          <div className="h-[2px] w-16 bg-cyber-cyan shadow-cyan" />
-          <span className="font-sub font-bold text-cyber-cyan tracking-[0.3em] text-sm uppercase">Веб-разработка для бизнеса</span>
-        </motion.div>
+        <div className="hero-shell">
+          <div className="hero-copy">
+            <motion.div initial={{ opacity: 0, x: -28 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }} className="hero-eyebrow">
+              <span />
+              Веб-разработка для бизнеса
+            </motion.div>
 
-        <div className="relative mb-12">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-header font-black text-4xl md:text-8xl lg:text-9xl leading-[0.95] text-white uppercase tracking-normal"
-          >
-            САЙТ ДЛЯ{' '}
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-400 relative z-20">
-              ВАШЕГО БИЗНЕСА
-            </span>
-          </motion.h1>
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.45 }}
-            className="mt-8 inline-flex flex-wrap items-center gap-3 border border-cyber-cyan/35 bg-cyber-cyan/10 px-5 py-3 font-sub text-sm md:text-base font-bold uppercase tracking-[0.14em] text-white shadow-cyan"
-          >
-            <span className="text-cyber-cyan">под ключ от 45 000 ₽</span>
-            <span className="text-white/45">/</span>
-            <span>фикс, без скрытых доплат</span>
-          </motion.div>
-          <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 0.8 }} className="absolute -bottom-6 left-0 w-2/3 md:w-1/2 h-2 bg-cyber-neon shadow-neon origin-left" />
-        </div>
+            <div className="relative">
+              <motion.h1
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.75, delay: 0.15 }}
+                className="font-header font-black text-5xl md:text-7xl lg:text-8xl leading-[1] text-slate-900 tracking-tight"
+              >
+                Сайт для бизнеса,{' '}
+                <span className="block text-cyber-neon relative z-20">
+                  который приводит заявки
+                </span>
+              </motion.h1>
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.75, delay: 0.3 }}
+                className="hero-price"
+              >
+                <span>от 45 000 ₽</span>
+                <b />
+                цена фиксируется до начала работ
+              </motion.div>
+            </div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1 }} className="flex flex-col md:flex-row justify-between items-start md:items-end mt-16 gap-10">
-          <div className="max-w-xl">
-            <h2 className="font-sub font-bold text-2xl md:text-3xl text-white mb-5 tracking-wide uppercase">
-              Сайт, на который будут звонить клиенты
-            </h2>
-            <p className="font-body text-cyber-text text-lg font-light leading-relaxed border-l-4 border-cyber-dark pl-6">
-              Человек быстро понимает, чем вы занимаетесь, почему вам можно доверять и куда нажать, чтобы связаться.
-            </p>
-            <div className="hero-mobile-points" aria-label="Что входит в сайт">
-              <span><MonitorSmartphone className="w-4 h-4" /> Удобно с телефона</span>
-              <span><ShieldCheck className="w-4 h-4" /> Цена до старта</span>
-              <span><PhoneCall className="w-4 h-4" /> Звонки и заявки</span>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.5 }} className="hero-message">
+              <h2>
+                Клиент видит услуги, цены и сразу понимает, как с вами связаться
+              </h2>
+              <p>
+                Покажем услуги, цены, примеры работ и контакты простыми словами. Без сложных терминов и лишней суеты.
+              </p>
+              <div className="hero-mobile-points" aria-label="Что входит в сайт">
+                <span><MonitorSmartphone className="w-4 h-4" /> Удобно с телефона</span>
+                <span><ShieldCheck className="w-4 h-4" /> Цена до начала</span>
+                <span><PhoneCall className="w-4 h-4" /> Звонки и заявки</span>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-6 w-full md:w-auto">
-            <button
-              onClick={() => openModal()}
-              className="px-7 md:px-8 py-4 bg-cyber-cyan text-cyber-bg font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-white transition-all duration-300 shadow-cyan hover:shadow-none text-center"
-            >
-              Обсудить проект
-            </button>
-            <a href="#workflow" className="px-7 md:px-8 py-4 border border-white/20 text-white font-sub font-bold tracking-wider uppercase text-xs md:text-sm hover:border-cyber-cyan hover:text-cyber-cyan transition-all duration-300 flex items-center justify-center bg-cyber-dark/50 backdrop-blur-sm">
-              Как я работаю
-            </a>
-          </div>
-        </motion.div>
-        <div className="mt-8 xl:hidden">
-          <PromoAnchor openModal={openModal} />
+
+          <motion.aside initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.35 }} className="hero-side">
+            <div className="hero-side__card">
+              <span className="hero-side__tag">Что получите</span>
+              <ul>
+                <li><CheckCircle2 className="w-5 h-5" /> Понятная структура для рекламы и заявок</li>
+                <li><CheckCircle2 className="w-5 h-5" /> Кнопки звонка, Telegram, MAX или форма</li>
+                <li><CheckCircle2 className="w-5 h-5" /> Мобильная версия в приоритете</li>
+              </ul>
+            </div>
+
+            <div className="hero-actions">
+              <div className="hero-actions__buttons">
+                <button
+                  onClick={() => openModal()}
+                  className="px-7 md:px-8 py-4 bg-cyber-neon text-white font-header font-bold tracking-wider uppercase text-sm md:text-base hover:bg-blue-700 transition-all duration-300 shadow-neon hover:shadow-none text-center"
+                >
+                  Обсудить сайт
+                </button>
+                <a href="#workflow" className="px-7 md:px-8 py-4 border border-slate-300 text-slate-900 font-sub font-bold tracking-wider uppercase text-xs md:text-sm hover:border-cyber-cyan hover:text-cyber-cyan transition-all duration-300 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+                  Как проходит работа
+                </a>
+              </div>
+              <PromoAnchor openModal={openModal} />
+            </div>
+          </motion.aside>
         </div>
       </div>
     </section>
   );
 }
-
 const statsData = [
   { value: '8+', label: 'Запущенных сайтов' },
   { value: '48 ч', label: 'Стартовый срок' },
-  { value: '45К', label: 'Цена старта' },
+  { value: '45К', label: 'Цена от' },
   { value: '50/50', label: 'Схема оплаты' },
 ];
 
 function Stats() {
   return (
-    <section className="stats-row border-y border-white/5 bg-[#070613]">
+    <section className="stats-row border-y border-slate-200 bg-white">
       <div className="container mx-auto px-6">
         <div className="stats-row__grid">
           {statsData.map(({ value, label }, i) => (
@@ -489,7 +515,7 @@ function PricingPromoStrip({ tier, openModal }) {
         <>
           <span>Промокод NEON-15</span>
           <strong>−15 000 ₽</strong>
-          <span className="pricing-thread__promo-hint">активировать →</span>
+          <span className="pricing-thread__promo-hint">закрепить →</span>
         </>
       )}
     </button>
@@ -498,7 +524,7 @@ function PricingPromoStrip({ tier, openModal }) {
 
 function Services({ openModal }) {
   return (
-    <section id="services" className="pricing-lab py-24 md:py-32 relative border-t border-white/5 bg-[#070613] overflow-hidden">
+    <section id="services" className="pricing-lab py-24 md:py-32 relative border-t border-slate-200 bg-white overflow-hidden">
       <div className="pricing-noise absolute inset-0 pointer-events-none opacity-70" />
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyber-cyan/50 to-transparent" />
       <div className="container mx-auto px-5 md:px-6 relative z-10">
@@ -506,10 +532,10 @@ function Services({ openModal }) {
           <div>
             <span className="inline-flex items-center gap-3 text-cyber-cyan font-sub text-xs tracking-[0.28em] uppercase font-bold">
               <span className="w-2 h-2 bg-cyber-cyan shadow-cyan" />
-              Тарифная сетка
+              Стоимость
             </span>
-            <h2 className="font-header font-black text-4xl sm:text-5xl md:text-7xl text-white mt-4 uppercase leading-[0.92] tracking-normal">
-              ВЫБЕРИ <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-white to-cyber-pink">ФОРМАТ САЙТА</span>
+            <h2 className="font-header font-black text-4xl sm:text-5xl md:text-6xl text-slate-900 mt-4 leading-[1] tracking-tight">
+              Выберите <span className="text-cyber-cyan">подходящий сайт</span>
             </h2>
           </div>
           <div className="pricing-brief">
@@ -517,10 +543,10 @@ function Services({ openModal }) {
               <span />
               <span />
               <span />
-              <b>pricing.board / 2026</b>
+              <b>цены на 2026 год</b>
             </div>
             <p>
-              Не три одинаковые карточки, а три разных сценария: первый сайт для старта, лендинг под заявки и сайт компании под несколько услуг.
+              Три понятных варианта: первый сайт для начала, лендинг под рекламу и сайт компании с несколькими страницами.
             </p>
             <div className="pricing-brief__meta">
               <span>без магазина</span>
@@ -548,10 +574,10 @@ function Services({ openModal }) {
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-header font-black text-2xl md:text-3xl text-white uppercase leading-none">{tier.name}</h3>
+                        <h3 className="font-header font-black text-2xl md:text-3xl text-slate-900 leading-none tracking-tight">{tier.title}</h3>
                         {tier.featured && <span className="pricing-thread__badge">Оптимальный</span>}
                       </div>
-                      <p className={`mt-2 font-sub text-xs uppercase tracking-[0.22em] ${accent.text}`}>{tier.title}</p>
+                      <p className={`mt-2 font-sub text-sm font-bold tracking-[0.16em] uppercase ${accent.text}`}>{tier.name}</p>
                     </div>
                   </div>
 
@@ -585,7 +611,7 @@ function Services({ openModal }) {
                       onClick={() => openModal(tier.title, tier.price, tier.rawPrice)}
                       className={`pricing-thread__cta ${accent.text}`}
                     >
-                      Обсудить <ArrowRight className="w-4 h-4" />
+                      Обсудить сайт <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
 
@@ -613,15 +639,15 @@ function Portfolio({ openModal }) {
   const [active, setActive] = useState(null);
 
   return (
-    <section id="portfolio" className="py-24 bg-[#05050e] relative">
-      <div className="absolute top-10 right-0 font-header font-black text-[10rem] md:text-[20rem] text-white/5 leading-none select-none -z-1 overflow-hidden whitespace-nowrap">REAL</div>
+    <section id="portfolio" className="py-24 bg-white relative">
+      <div className="absolute top-10 right-0 font-header font-black text-[10rem] md:text-[20rem] text-slate-900/5 leading-none select-none -z-1 overflow-hidden whitespace-nowrap">REAL</div>
       <div className="container mx-auto px-6 relative z-10">
         <div className="mb-20 pt-10">
           <span className="text-cyber-cyan font-sub text-sm tracking-[0.3em] uppercase font-bold">Кейсы</span>
-          <h2 className="font-header font-black text-4xl md:text-6xl text-white uppercase mt-2">
-            ПРИМЕРЫ <span className="text-cyber-cyan">ДЛЯ БИЗНЕСА</span>
+          <h2 className="font-header font-black text-4xl md:text-5xl lg:text-6xl text-slate-900 mt-3 leading-[1.05] tracking-tight">
+            Примеры работ <span className="text-cyber-cyan">для бизнеса</span>
           </h2>
-          <p className="mt-4 text-gray-400 max-w-2xl font-light">
+          <p className="mt-4 text-slate-600 max-w-2xl font-light">
             Сделал кейсы крупнее и понятнее: отрасль, задача, решение и результат. Изображения можно открыть и рассмотреть отдельно.
           </p>
         </div>
@@ -630,13 +656,12 @@ function Portfolio({ openModal }) {
           {portfolio.map((project) => (
             <button key={project.id} onClick={() => setActive(project)} className="portfolio-card group">
               <div className="portfolio-card__image">
-                <div className="absolute inset-0 bg-cyber-dark/40 group-hover:bg-transparent transition-colors duration-500 z-10" />
-                <img src={project.imageUrl} alt={project.title} className="w-full h-full object-cover transition-all duration-700 transform group-hover:scale-105" />
+                <img src={project.imageUrl} alt={project.title} className="w-full h-full object-cover transition-transform duration-700 transform group-hover:scale-105" />
                 <div className="absolute top-4 left-4 z-20">
                   <span className="portfolio-card__tag">{project.category}</span>
                 </div>
-                <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 backdrop-blur-[2px]">
-                  <div className="w-16 h-16 rounded-full border border-white/50 flex items-center justify-center bg-cyber-bg/50 text-white transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-slate-900/35 backdrop-blur-[2px]">
+                  <div className="w-16 h-16 rounded-full border-2 border-white flex items-center justify-center bg-cyber-neon text-white transform scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg">
                     <Eye className="w-8 h-8" />
                   </div>
                 </div>
@@ -658,13 +683,115 @@ function Portfolio({ openModal }) {
         <div className="mt-20 text-center">
           <button
             onClick={() => openModal()}
-            className="px-12 py-5 border border-white/10 bg-white/5 backdrop-blur text-white font-header font-bold uppercase tracking-widest hover:bg-cyber-neon hover:border-cyber-neon transition-all duration-300"
+            className="px-12 py-5 border border-slate-200 bg-slate-100 backdrop-blur text-slate-900 font-header font-bold uppercase tracking-widest hover:bg-cyber-neon hover:border-cyber-neon hover:text-white transition-all duration-300"
           >
-            Хочу такой сайт
+            Хочу похожий сайт
           </button>
         </div>
       </div>
       <ProjectModal project={active} onClose={() => setActive(null)} openModal={openModal} />
+    </section>
+  );
+}
+
+const liveProjects = [
+  {
+    title: 'Q-Bench',
+    url: 'https://ai-benchmark.space/',
+    type: 'AI audit platform',
+    accent: 'AI-SAFETY25',
+    lead: 'Сервис для оценки качества ответов ИИ-моделей, аудита чат-ботов и поиска рисков до контакта с клиентами.',
+    stack: ['AI evaluation', 'Landing', 'Pricing', 'Telegram CTA'],
+    result: 'Упаковали сложную B2B-услугу в понятную воронку: проблема, метрики, тарифы, демо и быстрый контакт.',
+    stats: ['24ч отчет', '30 тестов', 'ROI-блок']
+  },
+  {
+    title: 'DeepThroat',
+    url: 'https://xn------6cdcftgetdacf6b3ah5dablkc92a.xn--p1ai/',
+    type: 'AI security platform',
+    accent: 'OWASP / RAG / API',
+    lead: 'Платформа для проверки LLM до релиза и после инцидента: red teaming, RAG evaluation и API runner в едином дашборде.',
+    stack: ['OWASP LLM Top 10', 'DeepEval', 'Docker', 'RAG evaluation'],
+    result: 'Сложный security-продукт превратили в понятный первый экран: зачем проверять LLM, какие риски закрывает и как быстро перейти к аудиту.',
+    stats: ['red teaming', 'self-hosted', 'no telemetry']
+  },
+  {
+    title: 'Индекс Роста',
+    url: 'https://qubitai.ru/',
+    type: 'SEO / Digital',
+    accent: 'GROWTH OS',
+    lead: 'Digital-сайт про SEO, разработку, аналитику и контекстную рекламу для заявок в Яндексе и Google.',
+    stack: ['SEO pages', 'Analytics', 'Services', 'Content'],
+    result: 'Упаковали услуги в систему роста: точки входа, кейсы, план работ, доверие, формы и юридические страницы.',
+    stats: ['+38% leads', '2.4x visibility', '126 pages']
+  }
+];
+
+function LiveProjects({ openModal }) {
+  return (
+    <section id="live-projects" className="py-24 bg-slate-50 border-t border-slate-200 relative overflow-hidden">
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="mb-16 max-w-2xl">
+          <span className="text-cyber-cyan font-sub text-sm tracking-[0.3em] uppercase font-bold">Действующие сайты</span>
+          <h2 className="font-header font-black text-4xl md:text-5xl lg:text-6xl text-slate-900 mt-3 leading-[1.05] tracking-tight">
+            Сайты, <span className="text-cyber-cyan">которые работают прямо сейчас</span>
+          </h2>
+          <p className="mt-5 text-slate-600 font-light text-lg">
+            Реальные проекты, открываются по доменам. Разные задачи: AI-аудит, ИИ-безопасность, SEO-digital.
+          </p>
+        </div>
+
+        <div className="live-projects__grid">
+          {liveProjects.map((project, index) => {
+            const hostname = (() => { try { return new URL(project.url).hostname; } catch { return project.url; } })();
+            return (
+              <motion.article
+                key={project.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`live-card live-card--${index + 1}`}
+              >
+                <div className="live-card__screen">
+                  <div className="live-card__bar">
+                    <span /><span /><span />
+                    <small>{hostname}</small>
+                  </div>
+                  <div className="live-card__preview">
+                    <div className="live-card__eyebrow">{project.type}</div>
+                    <div className="live-card__title">{project.title}</div>
+                    <div className="live-card__accent">{project.accent}</div>
+                    <div className="live-card__lines">
+                      <i /><i /><i />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="live-card__body">
+                  <div className="live-card__meta">
+                    <span>0{index + 1}</span>
+                    <span>production</span>
+                  </div>
+                  <h3>{project.title}</h3>
+                  <p>{project.lead}</p>
+                  <div className="live-card__stats">
+                    {project.stats.map((stat) => <span key={stat}>{stat}</span>)}
+                  </div>
+                  <p className="live-card__result">{project.result}</p>
+                  <div className="live-card__stack">
+                    {project.stack.map((tag) => <span key={tag}>{tag}</span>)}
+                  </div>
+                  <div className="live-card__actions">
+                    <a href={project.url} target="_blank" rel="noopener noreferrer">Открыть сайт <ArrowRight className="w-4 h-4" /></a>
+                    <button type="button" onClick={() => openModal('Похожий проект', '')}>Хочу похожий</button>
+                  </div>
+                </div>
+              </motion.article>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }
@@ -685,73 +812,69 @@ function ProjectModal({ project, onClose, openModal }) {
   return (
     <AnimatePresence>
       {project && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-[#0A091A] overflow-y-auto">
-          <button onClick={onClose} className="fixed top-6 right-6 z-[110] w-12 h-12 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-cyber-neon hover:border-cyber-neon transition-all duration-300 group" aria-label="Закрыть проект">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="project-modal fixed inset-0 z-[100] overflow-y-auto">
+          <button onClick={onClose} className="project-modal__close fixed top-6 right-6 z-[110] w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 group" aria-label="Закрыть проект">
             <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
           </button>
-          <button type="button" onClick={() => setZoomImage(project.imageUrl)} className="relative h-[40vh] md:h-[80vh] w-full block text-left" aria-label={`Открыть изображение ${project.title}`}>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0A091A]/50 to-[#0A091A] z-10" />
-            <img src={project.imageUrl} alt={project.title} className="w-full h-full object-cover" />
-            <div className="absolute bottom-0 left-0 w-full z-20 p-6 md:p-12">
-              <div className="container mx-auto">
-                <motion.span initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="inline-block px-4 py-2 bg-cyber-neon/20 border border-cyber-neon text-cyber-neon font-sub font-bold tracking-widest text-xs uppercase mb-4 md:mb-6 backdrop-blur-md">
-                  {project.category}
-                </motion.span>
-                <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="font-header font-black text-3xl md:text-8xl text-white uppercase leading-none mb-4">
-                  {project.title}
-                </motion.h1>
-                <span className="project-image-hint"><Eye className="w-4 h-4" /> Открыть изображение</span>
-              </div>
-            </div>
-          </button>
 
-          <div className="container mx-auto px-6 py-16 md:py-24">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              <div className="lg:col-span-4 space-y-8">
-                <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="bg-cyber-dark/50 p-8 border border-white/5 backdrop-blur-sm">
-                  <h3 className="font-header font-bold text-xl text-white mb-6 uppercase border-b border-white/10 pb-4">Детали</h3>
-                  <div className="space-y-6">
+          <div className="container mx-auto px-6 py-20 md:py-24">
+            <div className="project-modal__shell">
+              <div className="project-modal__hero">
+                <button type="button" onClick={() => setZoomImage(project.imageUrl)} className="project-modal__image" aria-label={`Открыть изображение ${project.title}`}>
+                  <img src={project.imageUrl} alt={project.title} />
+                  <span className="project-image-hint"><Eye className="w-4 h-4" /> Открыть изображение</span>
+                </button>
+                <div className="project-modal__intro">
+                  <motion.span initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }} className="project-modal__category">
+                    {project.category}
+                  </motion.span>
+                  <motion.h1 initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.22 }}>
+                    {project.title}
+                  </motion.h1>
+                  <p>{project.description}</p>
+                  <button
+                    onClick={() => { onClose(); setTimeout(() => openModal(), 100); }}
+                    className="project-modal__cta"
+                  >
+                    Обсудить похожий сайт <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="project-modal__grid">
+                <motion.aside initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="project-modal__details">
+                  <h3>Детали</h3>
+                  <div className="project-modal__detail-list">
                     <Detail icon={Timer} label="Год" value={project.year || '2026'} />
                     <Detail icon={ShieldCheck} label="Клиент" value={project.client || project.title} />
-                    <div className="flex items-start gap-4">
-                      <Code2 className="text-cyber-neon w-5 h-5 mt-1" />
+                    <div className="project-detail">
+                      <Code2 className="project-detail__icon" />
                       <div>
-                        <span className="block text-gray-400 text-xs uppercase tracking-wider">Технологии</span>
-                        <div className="flex flex-wrap gap-2 mt-1">
+                        <span>Что сделано</span>
+                        <div className="project-detail__chips">
                           {project.techStack.map((tech) => (
-                            <span key={tech} className="text-xs text-white/80 bg-white/5 px-2 py-1 rounded-sm">{tech}</span>
+                            <em key={tech}>{tech}</em>
                           ))}
                         </div>
                       </div>
                     </div>
                   </div>
+                </motion.aside>
+
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.38 }} className="project-modal__texts">
+                  <ProjectText number="01." title="Задача" color="text-cyber-pink" text={project.challenge} />
+                  <ProjectText number="02." title="Решение" color="text-cyber-neon" text={project.solution} />
+                  <ProjectText number="03." title="Результат" color="text-cyber-cyan" text={project.result} />
                 </motion.div>
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  onClick={() => { onClose(); setTimeout(() => openModal(), 100); }}
-                  className="w-full py-4 bg-white text-cyber-bg font-header font-bold uppercase tracking-widest hover:bg-cyber-neon hover:text-white transition-colors flex items-center justify-center gap-2"
-                >
-                  Обсудить проект <ArrowRight className="w-5 h-5" />
-                </motion.button>
               </div>
 
-              <div className="lg:col-span-8">
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }} className="prose prose-invert prose-lg max-w-none">
-                  <ProjectText number="01." title="ЗАДАЧА" color="text-cyber-pink" text={project.challenge} />
-                  <ProjectText number="02." title="РЕШЕНИЕ" color="text-cyber-neon" text={project.solution} />
-                  <ProjectText number="03." title="РЕЗУЛЬТАТ" color="text-cyber-cyan" text={project.result} />
-                </motion.div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-                  {project.additionalImages.map((image, index) => (
-                    <motion.button type="button" onClick={() => setZoomImage(image)} key={`${image}-${index}`} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 * index }} className="relative h-64 md:h-80 overflow-hidden rounded-sm group text-left">
-                      <img src={image} alt={`${project.title} detail`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                      <div className="absolute inset-0 bg-cyber-neon/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-overlay" />
-                      <span className="project-thumb-hint"><Eye className="w-4 h-4" /> Смотреть</span>
-                    </motion.button>
-                  ))}
-                </div>
+              <div className="project-modal__gallery">
+                {project.additionalImages.map((image, index) => (
+                  <motion.button type="button" onClick={() => setZoomImage(image)} key={`${image}-${index}`} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 * index }} className="project-modal__thumb">
+                    <img src={image} alt={`${project.title} detail`} />
+                    <span className="project-thumb-hint"><Eye className="w-4 h-4" /> Смотреть</span>
+                  </motion.button>
+                ))}
               </div>
             </div>
           </div>
@@ -780,11 +903,11 @@ function ProjectModal({ project, onClose, openModal }) {
 
 function Detail({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-start gap-4">
-      <Icon className="text-cyber-cyan w-5 h-5 mt-1" />
+    <div className="project-detail">
+      <Icon className="project-detail__icon" />
       <div>
-        <span className="block text-gray-400 text-xs uppercase tracking-wider">{label}</span>
-        <span className="text-white font-sub font-bold">{value}</span>
+        <span>{label}</span>
+        <strong>{value}</strong>
       </div>
     </div>
   );
@@ -792,11 +915,11 @@ function Detail({ icon: Icon, label, value }) {
 
 function ProjectText({ number, title, color, text }) {
   return (
-    <div className="mb-12">
-      <h3 className="font-header font-bold text-3xl text-white mb-4 flex items-center gap-3">
+    <div className="project-text">
+      <h3>
         <span className={color}>{number}</span> {title}
       </h3>
-      <p className={`font-body text-gray-300 font-light leading-relaxed text-lg ${number === '03.' ? 'border-l-4 border-cyber-cyan pl-6 py-2 bg-cyber-cyan/5' : ''}`}>{text}</p>
+      <p className={number === '03.' ? 'project-text__result' : ''}>{text}</p>
     </div>
   );
 }
@@ -816,16 +939,16 @@ const teamExpert = {
 
 function Testimonials() {
   return (
-    <section id="testimonials" className="py-24 bg-[#05050e] border-t border-white/5 relative overflow-hidden">
+    <section id="testimonials" className="py-24 bg-white border-t border-slate-200 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-cyber-neon/5 filter blur-[100px] pointer-events-none" />
       <div className="container mx-auto px-6 relative z-10">
         <div className="testimonials-head">
           <div>
             <span className="text-cyber-neon font-sub text-sm tracking-[0.3em] uppercase font-bold">Отзывы</span>
-            <h2 className="font-header font-black text-4xl md:text-6xl text-white uppercase mt-2">
-              ЧТО <span className="text-cyber-neon">ГОВОРЯТ</span> КЛИЕНТЫ
+            <h2 className="font-header font-black text-4xl md:text-5xl lg:text-6xl text-slate-900 mt-3 leading-[1.05] tracking-tight">
+              Что <span className="text-cyber-neon">говорят</span> клиенты
             </h2>
-            <p className="mt-4 text-gray-400 font-light">Не идеальная витрина на 5.0, а живые впечатления после запуска и правок.</p>
+            <p className="mt-4 text-slate-600 font-light">Не идеальная витрина на 5.0, а живые впечатления после запуска и правок.</p>
           </div>
           <div className="testimonials-score">
             <strong>4.8</strong>
@@ -871,7 +994,7 @@ function Testimonials() {
                     {Array.from({ length: 5 }).map((_, idx) => (
                       <Star
                         key={idx}
-                        className={`w-4 h-4 ${idx < t.rating ? `fill-current ${colors.text}` : 'text-white/15'}`}
+                        className={`w-4 h-4 ${idx < t.rating ? `fill-current ${colors.text}` : 'text-slate-300'}`}
                       />
                     ))}
                     <span>{t.rating}.0</span>
@@ -898,14 +1021,14 @@ function Workflow({ openModal }) {
   const icons = [MessageCircle, Zap, Rocket];
 
   return (
-    <section id="workflow" className="py-24 bg-cyber-bg relative overflow-hidden border-t border-white/5">
+    <section id="workflow" className="py-24 bg-cyber-bg relative overflow-hidden border-t border-slate-200">
       <div className="container mx-auto px-6 relative z-10">
         <div className="mb-20 text-center max-w-3xl mx-auto">
           <span className="text-cyber-cyan font-sub text-sm tracking-[0.3em] uppercase font-bold">Процесс</span>
-          <h2 className="font-header font-black text-4xl md:text-6xl text-white mt-4 uppercase leading-tight">
-            ОТ ИДЕИ ДО САЙТА <span className="text-cyber-cyan relative inline-block">БЕЗ ЛИШНЕЙ БЮРОКРАТИИ</span>
+          <h2 className="font-header font-black text-4xl md:text-5xl lg:text-6xl text-slate-900 mt-4 leading-[1.05] tracking-tight">
+            От идеи до сайта — <span className="text-cyber-cyan relative inline-block">без лишней бюрократии</span>
           </h2>
-          <p className="mt-6 text-gray-400 font-light">Сначала фиксируем задачу и цену, потом показываю тестовую ссылку, вносим правки и запускаем сайт.</p>
+          <p className="mt-6 text-slate-600 font-light">Сначала фиксируем задачу и цену, потом показываю тестовую ссылку, вносим правки и запускаем сайт.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24 relative">
@@ -915,39 +1038,39 @@ function Workflow({ openModal }) {
             const color = index === 0 ? 'text-cyber-pink' : index === 1 ? 'text-cyber-neon' : 'text-cyber-cyan';
             return (
               <div key={step.title} className="relative z-10 flex flex-col items-center text-center group">
-                <div className="w-24 h-24 rounded-full bg-[#0A091A] border-2 border-white/10 flex items-center justify-center mb-6 group-hover:border-white/40 transition-colors shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                <div className="w-24 h-24 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center mb-6 group-hover:border-cyber-cyan transition-colors shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
                   <Icon className={`w-10 h-10 ${color}`} />
                 </div>
-                <div className="bg-cyber-dark/50 p-6 border border-white/5 rounded-sm w-full hover:bg-cyber-dark hover:border-white/20 transition-all duration-300">
-                  <h3 className="font-header font-bold text-2xl text-white mb-3">{step.title}</h3>
-                  <p className="font-body text-sm text-gray-400 leading-relaxed">{step.text}</p>
+                <div className="bg-white p-6 border border-slate-200 rounded-sm w-full hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
+                  <h3 className="font-header font-bold text-2xl text-slate-900 mb-3">{step.title}</h3>
+                  <p className="font-body text-sm text-slate-600 leading-relaxed">{step.text}</p>
                 </div>
               </div>
             );
           })}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-white/10 rounded-lg overflow-hidden mb-12">
-          <div className="bg-[#1a1a2e] p-10 md:p-16 flex flex-col justify-center relative overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-slate-200 rounded-lg overflow-hidden mb-12">
+          <div className="bg-slate-100 p-10 md:p-16 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-red-500/50" />
-            <h3 className="font-header font-bold text-2xl text-gray-400 mb-6 flex items-center gap-3">
-              <XCircle className="text-red-500" /> ОБЫЧНЫЙ ПОДХОД
+            <h3 className="font-header font-bold text-2xl text-slate-600 mb-6 flex items-center gap-3">
+              <XCircle className="text-red-500" /> ЧАСТЫЕ ПРОБЛЕМЫ
             </h3>
-            <ul className="space-y-4 font-body text-gray-500 text-sm">
-              <li className="flex items-start gap-3"><XCircle className="w-5 h-5 shrink-0 mt-0.5" /><span>Неясная цена и доплаты после старта</span></li>
-              <li className="flex items-start gap-3"><XCircle className="w-5 h-5 shrink-0 mt-0.5" /><span>Медленные конструкторы (Tilda, WordPress)</span></li>
+            <ul className="space-y-4 font-body text-slate-500 text-sm">
+              <li className="flex items-start gap-3"><XCircle className="w-5 h-5 shrink-0 mt-0.5" /><span>Неясная цена и доплаты после начала работ</span></li>
+              <li className="flex items-start gap-3"><XCircle className="w-5 h-5 shrink-0 mt-0.5" /><span>Сайт долго открывается и неудобен с телефона</span></li>
               <li className="flex items-start gap-3"><span>✖</span><span>Переплата за менеджмент и лишние созвоны</span></li>
             </ul>
           </div>
-          <div className="bg-cyber-dark p-10 md:p-16 flex flex-col justify-center relative overflow-hidden">
+          <div className="bg-white p-10 md:p-16 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-cyber-cyan" />
-            <h3 className="font-header font-bold text-2xl text-white mb-6 flex items-center gap-3">
-              <Zap className="text-cyber-cyan" /> МОЙ ПОДХОД
+            <h3 className="font-header font-bold text-2xl text-slate-900 mb-6 flex items-center gap-3">
+              <ShieldCheck className="text-cyber-cyan" /> КАК РАБОТАЮ Я
             </h3>
-            <ul className="space-y-4 font-body text-gray-300 text-sm font-medium">
-              <li className="flex items-start gap-3 text-white"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Срок и стоимость фиксируем <span className="text-cyber-cyan">до старта</span></span></li>
-              <li className="flex items-start gap-3 text-white"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Сайт быстро открывается и удобно смотрится с телефона.</span></li>
-              <li className="flex items-start gap-3 text-white"><span className="text-cyber-cyan">✔</span><span>Прямая связь с разработчиком.</span></li>
+            <ul className="space-y-4 font-body text-slate-700 text-sm font-medium">
+              <li className="flex items-start gap-3 text-slate-900"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Срок и стоимость фиксируем <span className="text-cyber-cyan">до начала</span></span></li>
+              <li className="flex items-start gap-3 text-slate-900"><Check className="w-5 h-5 shrink-0 mt-0.5 text-cyber-cyan" /><span>Сайт быстро открывается и удобно смотрится с телефона.</span></li>
+              <li className="flex items-start gap-3 text-slate-900"><span className="text-cyber-cyan">✔</span><span>Прямая связь с разработчиком.</span></li>
             </ul>
           </div>
         </div>
@@ -955,9 +1078,9 @@ function Workflow({ openModal }) {
         <div className="text-center">
           <button
             onClick={() => openModal()}
-            className="px-12 py-5 bg-cyber-neon text-white font-header font-bold uppercase tracking-widest hover:bg-white hover:text-cyber-bg transition-all duration-300 shadow-neon"
+            className="px-12 py-5 bg-cyber-neon text-white font-header font-bold uppercase tracking-widest hover:bg-blue-700 transition-all duration-300 shadow-neon"
           >
-            Начать проект
+            Обсудить сайт
           </button>
         </div>
       </div>
@@ -967,21 +1090,21 @@ function Workflow({ openModal }) {
 
 function Terms() {
   return (
-    <section id="terms" className="py-24 bg-[#090816] border-t border-white/5 relative overflow-hidden">
+    <section id="terms" className="py-24 bg-slate-50 border-t border-slate-200 relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
         <div className="mb-16">
-          <span className="text-cyber-pink font-sub text-sm tracking-[0.3em] uppercase font-bold">Договор</span>
-          <h2 className="font-header font-black text-4xl md:text-6xl text-white mt-2 uppercase leading-tight">
-            УСЛОВИЯ <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyber-pink to-cyber-neon">РАБОТЫ</span>
+          <span className="text-cyber-pink font-sub text-sm tracking-[0.3em] uppercase font-bold">Прозрачные условия</span>
+          <h2 className="font-header font-black text-4xl md:text-5xl lg:text-6xl text-slate-900 mt-3 leading-[1.05] tracking-tight">
+            Условия <span className="text-cyber-cyan">без сюрпризов</span>
           </h2>
-          <p className="mt-4 text-gray-400 max-w-2xl font-light">Прозрачные правила для комфортного сотрудничества. Мы ценим время друг друга.</p>
+          <p className="mt-4 text-slate-600 max-w-2xl font-light">До начала работ понятно, что входит в стоимость, когда будет первый вариант и как передаются доступы.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <TermCard icon={CreditCard} color="text-cyber-cyan" title="ОПЛАТА 50/50">
-            <p>Работаю официально через <span className="text-white font-bold">ЮКассу</span>.</p>
+            <p>Работаю официально через <span className="text-slate-900 font-bold">ЮКассу</span>.</p>
             <ul className="space-y-2">
-              <li>50% предоплата для старта.</li>
+              <li>50% предоплата для начала работ.</li>
               <li>50% перед передачей доступов.</li>
             </ul>
           </TermCard>
@@ -1001,15 +1124,15 @@ function Terms() {
 
 function TermCard({ icon: Icon, color, title, children }) {
   return (
-    <div className="group bg-cyber-dark/40 p-8 border border-white/5 hover:border-white/20 transition-all duration-300 relative overflow-hidden">
+    <div className="group bg-white/70 p-8 border border-slate-200 hover:border-slate-300 transition-all duration-300 relative overflow-hidden">
       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
         <Icon className={`w-24 h-24 ${color}`} />
       </div>
-      <div className="w-12 h-12 bg-white/5 border border-white/10 flex items-center justify-center rounded-sm mb-6">
+      <div className="w-12 h-12 bg-slate-100 border border-slate-200 flex items-center justify-center rounded-sm mb-6">
         <Icon className={`${color} w-6 h-6`} />
       </div>
-      <h3 className={`font-header font-bold text-xl text-white mb-4 uppercase tracking-wide ${color}`}>{title}</h3>
-      <div className="font-body text-gray-400 text-sm leading-relaxed space-y-4">{children}</div>
+      <h3 className={`font-header font-bold text-xl mb-4 uppercase tracking-wide ${color}`}>{title}</h3>
+      <div className="font-body text-slate-600 text-sm leading-relaxed space-y-4">{children}</div>
     </div>
   );
 }
@@ -1018,15 +1141,15 @@ function FAQ() {
   const [openIndex, setOpenIndex] = useState(null);
 
   return (
-    <section id="faq" className="py-24 bg-[#070613] border-t border-white/5 relative overflow-hidden">
+    <section id="faq" className="py-24 bg-white border-t border-slate-200 relative overflow-hidden">
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-cyber-cyan/5 filter blur-[120px] pointer-events-none" />
       <div className="container mx-auto px-6 relative z-10">
         <div className="mb-16 max-w-2xl">
           <span className="text-cyber-cyan font-sub text-sm tracking-[0.3em] uppercase font-bold">FAQ</span>
-          <h2 className="font-header font-black text-4xl md:text-6xl text-white mt-2 uppercase leading-tight">
-            ЧАСТЫЕ <span className="text-cyber-cyan">ВОПРОСЫ</span>
+          <h2 className="font-header font-black text-4xl md:text-5xl lg:text-6xl text-slate-900 mt-3 leading-[1.05] tracking-tight">
+            Частые <span className="text-cyber-cyan">вопросы</span>
           </h2>
-          <p className="mt-4 text-gray-400 font-light">Ответы на то, что спрашивают чаще всего перед стартом.</p>
+          <p className="mt-4 text-slate-600 font-light">Ответы на то, что спрашивают чаще всего перед началом работы.</p>
         </div>
 
         <div className="faq-accordion max-w-3xl">
@@ -1064,7 +1187,7 @@ function FAQ() {
 
 function LandingBonus({ openModal }) {
   return (
-    <section className="landing-bonus bg-[#070613] border-t border-white/5 relative overflow-hidden">
+    <section className="landing-bonus bg-white border-t border-slate-200 relative overflow-hidden">
       <div className="landing-bonus__word" aria-hidden="true">GIFT</div>
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
@@ -1125,36 +1248,185 @@ function LandingBonus({ openModal }) {
   );
 }
 
-function Footer({ openModal }) {
+function InlineContactForm() {
+  const [fields, setFields] = useState({ name: '', contact: '' });
+  const [status, setStatus] = useState('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+  const { active: promoActive } = usePromoTimer();
+
+  const update = (key) => (e) => setFields((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (status === 'sending') return;
+    setStatus('sending');
+    setErrorMsg('');
+
+    const fd = new FormData();
+    const baseMessage = 'Заявка с формы на главной: уточнить задачу в переписке.';
+    fd.append('name', fields.name);
+    fd.append('contact', fields.contact);
+    fd.append('message', baseMessage + (promoActive ? '\n[Промокод NEON-15 закреплен]' : ''));
+    fd.append('plan', promoActive ? 'Форма на главной с промокодом NEON-15' : 'Форма на главной');
+    fd.append('price', promoActive ? `Промокод NEON-15: скидка ${formatPrice(PROMO_DISCOUNT)} на проект` : 'Тариф по задаче');
+    fd.append('personal_data_agree', 'yes');
+    fd.append('privacy_read', 'yes');
+
+    try {
+      const res = await fetch('/contact.php', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!json.ok) {
+        setStatus('error');
+        setErrorMsg(json.message || 'Ошибка при отправке.');
+        return;
+      }
+      trackGoal('lead_sent', {
+        plan: fd.get('plan') || 'Форма на главной',
+        price: fd.get('price') || 'Тариф по задаче',
+        source: 'main_contact_form'
+      });
+      setFields({ name: '', contact: '' });
+      setStatus('success');
+    } catch {
+      setStatus('error');
+      setErrorMsg('Сервер недоступен. Напишите напрямую в Telegram или MAX.');
+    }
+  };
+
   return (
-    <footer id="contact" className="py-24 bg-cyber-dark border-t border-white/5 relative overflow-hidden">
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-64 bg-cyber-neon opacity-5 filter blur-[150px] pointer-events-none" />
+    <form onSubmit={handleSubmit} className="contact-inline-form">
+      <div className="contact-inline-form__head">
+        <span>Форма обратной связи</span>
+        <h3>Оставьте имя и контакт</h3>
+        <p>Я сам уточню задачу в переписке или по звонку.</p>
+      </div>
+
+      <div className="contact-inline-form__grid">
+        <label>
+          <span>Имя *</span>
+          <input
+            type="text"
+            value={fields.name}
+            onChange={update('name')}
+            placeholder="Как вас зовут?"
+            required
+            maxLength={120}
+            autoComplete="name"
+          />
+        </label>
+        <label>
+          <span>Телефон, Telegram или MAX *</span>
+          <input
+            type="text"
+            value={fields.contact}
+            onChange={update('contact')}
+            placeholder="@username или +7..."
+            required
+            maxLength={180}
+          />
+        </label>
+      </div>
+
+      {status === 'error' && <p className="contact-inline-form__error">{errorMsg}</p>}
+      {status === 'success' && <p className="contact-inline-form__success">Заявка отправлена. Я свяжусь с вами в ближайшее время.</p>}
+
+      <button type="submit" disabled={status === 'sending'} className="contact-inline-form__submit">
+        {status === 'sending' ? (
+          <><Loader2 className="w-5 h-5 animate-spin" /> Отправляю...</>
+        ) : (
+          <><Send className="w-5 h-5" /> Отправить заявку</>
+        )}
+      </button>
+
+      <p className="contact-inline-form__legal">
+        Нажимая «Отправить», вы соглашаетесь с{' '}
+        <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Политикой конфиденциальности</a>.
+      </p>
+    </form>
+  );
+}
+
+function ContactSection() {
+  return (
+    <section id="contact-form" className="contact-section border-t border-slate-200 relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
-        <div className="flex flex-col items-center text-center mb-16">
-          <span className="text-cyber-cyan font-sub text-sm tracking-[0.4em] uppercase font-bold mb-4 animate-pulse">На связи</span>
-          <h2 className="font-header font-black text-5xl md:text-7xl text-white uppercase leading-none mb-8">
-            ГОТОВЫ <span className="text-outline-white hover:text-cyber-neon transition-colors duration-300 cursor-default">НАЧАТЬ?</span>
-          </h2>
-          <p className="font-body text-cyber-text font-light max-w-xl mb-10">
-            Оставьте заявку через форму — или напишите напрямую в Telegram. Без брифов на 10 страниц и бюрократии.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <button
-              onClick={() => openModal()}
-              className="group relative inline-flex items-center gap-4 px-10 py-5 bg-cyber-neon hover:bg-white text-white hover:text-cyber-bg overflow-hidden transition-all duration-300 shadow-neon hover:shadow-none"
-            >
-              <Send className="w-5 h-5 relative z-10" />
-              <span className="font-header font-bold tracking-widest text-lg uppercase relative z-10">Оставить заявку</span>
-            </button>
-            <a href="https://t.me/Rambajo" target="_blank" rel="noopener noreferrer" className="group relative inline-flex items-center gap-4 px-10 py-5 bg-[#229ED9] hover:bg-[#1e8bbd] text-white overflow-hidden transition-all duration-300 shadow-[0_0_20px_rgba(34,158,217,0.3)] hover:shadow-[0_0_30px_rgba(34,158,217,0.6)] rounded-sm">
-              <MessageCircle className="w-5 h-5 relative z-10" />
-              <span className="font-header font-bold tracking-widest text-lg uppercase relative z-10">Telegram</span>
-            </a>
+        <div className="contact-section__grid">
+          <div className="contact-section__copy">
+            <span>Контакты</span>
+            <h2>Написать напрямую</h2>
+            <p>
+              Выберите удобный мессенджер. Отвечу в Telegram или MAX.
+            </p>
+            <div className="contact-section__actions">
+              <a
+                href="https://t.me/Rambajo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="contact-section__secondary"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Telegram
+              </a>
+              <a
+                href="https://max.ru/u/f9LHodD0cOJ5MDDMdgloDt0hKnUdAN8UnSnCJ4M6vSdQUFm08O7EDBIkgEQ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="contact-section__primary"
+              >
+                <MessageCircle className="w-4 h-4" />
+                MAX
+              </a>
+            </div>
+            <p className="contact-section__note">
+              MAX — российский мессенджер для переписки и звонков.
+            </p>
+          </div>
+
+          <InlineContactForm />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer id="contact" className="bg-white border-t border-slate-200 relative">
+      <div className="container mx-auto px-6 py-16 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-[1.4fr_0.8fr_0.8fr] gap-10 md:gap-12 mb-12">
+          <div>
+            <div className="font-header font-black text-3xl text-slate-900 tracking-tight">
+              NEON<span className="text-cyber-neon"> DEV</span>
+            </div>
+            <p className="mt-4 max-w-md text-slate-600 font-light leading-relaxed">
+              Сайты под ключ для малого бизнеса: страницы услуг, продающие лендинги и небольшие сайты компаний.
+              Чистый код, адаптив, аналитика и запуск без подписок на конструктор.
+            </p>
+          </div>
+
+          <div>
+            <div className="font-sub text-xs tracking-[0.18em] uppercase text-cyber-neon font-bold mb-4">Контакты</div>
+            <div className="flex flex-col gap-3 text-sm">
+              <a href="https://t.me/Rambajo" target="_blank" rel="noopener noreferrer" className="text-slate-700 hover:text-cyber-neon transition-colors">Telegram</a>
+              <a href="https://vk.com/allakhverdievr" target="_blank" rel="noopener noreferrer" className="text-slate-700 hover:text-cyber-neon transition-colors">VK</a>
+              <a href="mailto:qubitaibots@gmail.com" className="text-slate-700 hover:text-cyber-neon transition-colors">qubitaibots@gmail.com</a>
+              <a href="tel:+79012728916" className="text-slate-700 hover:text-cyber-neon transition-colors">+7 901 272-89-16</a>
+            </div>
+          </div>
+
+          <div>
+            <div className="font-sub text-xs tracking-[0.18em] uppercase text-cyber-neon font-bold mb-4">Документы</div>
+            <div className="flex flex-col gap-3 text-sm">
+              <a href="/privacy.html" className="text-slate-700 hover:text-cyber-neon transition-colors">Политика конфиденциальности</a>
+              <a href="/consent.html" className="text-slate-700 hover:text-cyber-neon transition-colors">Согласие на обработку ПД</a>
+              <a href="/cookies.html" className="text-slate-700 hover:text-cyber-neon transition-colors">Политика cookies</a>
+            </div>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-center pt-12 border-t border-white/10">
-          <span className="font-header font-bold text-2xl text-white">NEON<span className="text-cyber-neon">DEV</span></span>
-          <span className="text-gray-500 font-sub text-xs tracking-wider">© 2026 NEON DEV. DIGITAL PRODUCTION.</span>
+
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-8 border-t border-slate-200">
+          <span className="text-slate-500 text-xs font-sub tracking-wider">© 2026 NEON DEV. Разработка сайтов для малого бизнеса.</span>
+          <span className="text-slate-400 text-xs font-mono">status: online · stack: react + php</span>
         </div>
       </div>
     </footer>
@@ -1167,8 +1439,8 @@ function ModalSuccess({ plan, onClose }) {
       <div className="contact-modal__success-icon">
         <CheckCircle2 className="w-10 h-10 text-cyber-cyan" />
       </div>
-      <h3 className="font-header font-black text-2xl md:text-3xl text-white uppercase">Заявка отправлена!</h3>
-      <p className="text-gray-400 font-light text-center max-w-sm leading-relaxed">
+      <h3 className="font-header font-black text-2xl md:text-3xl text-slate-900 uppercase">Заявка отправлена!</h3>
+      <p className="text-slate-600 font-light text-center max-w-sm leading-relaxed">
         Увижу её в ближайшее время и напишу вам{plan ? ` по тарифу "${plan}"` : ''}. Обычно отвечаю в течение нескольких часов.
       </p>
       <a
@@ -1180,7 +1452,7 @@ function ModalSuccess({ plan, onClose }) {
         <MessageCircle className="w-5 h-5" />
         Написать в Telegram
       </a>
-      <button onClick={onClose} className="text-gray-500 hover:text-white text-sm transition-colors mt-2">
+      <button onClick={onClose} className="text-slate-500 hover:text-slate-900 text-sm transition-colors mt-2">
         Закрыть
       </button>
     </div>
@@ -1230,7 +1502,8 @@ function ContactModal({ data, onClose }) {
     const fd = new FormData();
     fd.append('name', fields.name);
     fd.append('contact', fields.contact);
-    const msgWithPromo = fields.message + (promoActive ? '\n[Промокод NEON-15 активирован]' : '');
+    const baseMessage = fields.message.trim() || 'Заявка без комментария: уточнить задачу в переписке.';
+    const msgWithPromo = baseMessage + (promoActive ? '\n[Промокод NEON-15 закреплен]' : '');
     fd.append('message', msgWithPromo);
     fd.append('plan', data?.plan || (promoActive ? 'Проект с промокодом NEON-15' : 'Не указан'));
     fd.append('price', promoPrice);
@@ -1241,6 +1514,10 @@ function ContactModal({ data, onClose }) {
       const res = await fetch('/contact.php', { method: 'POST', body: fd });
       const json = await res.json();
       if (json.ok) {
+        trackGoal('lead_sent', {
+          plan: fd.get('plan') || 'Не указан',
+          price: fd.get('price') || 'Не указана'
+        });
         setStatus('success');
       } else {
         setStatus('error');
@@ -1273,7 +1550,7 @@ function ContactModal({ data, onClose }) {
             >
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center border border-white/10 bg-white/5 hover:bg-cyber-neon hover:border-cyber-neon text-white transition-all"
+                className="absolute top-4 right-4 z-10 w-9 h-9 flex items-center justify-center border border-slate-200 bg-slate-100 hover:bg-cyber-neon hover:border-cyber-neon text-slate-700 hover:text-white transition-all"
                 aria-label="Закрыть"
               >
                 <X className="w-4 h-4" />
@@ -1284,7 +1561,7 @@ function ContactModal({ data, onClose }) {
               ) : (
                 <>
                   <div className="contact-modal__header">
-                    <h2>Обсудить проект</h2>
+                    <h2>Обсудить сайт</h2>
                     {data?.plan && (
                       <p className="contact-modal__plan">
                         Тариф: <span>{data.plan}</span>
@@ -1376,6 +1653,37 @@ function ContactModal({ data, onClose }) {
   );
 }
 
+function FloatingDiscuss({ openModal }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.pageYOffset > 420);
+    window.addEventListener('scroll', onScroll);
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.button
+          type="button"
+          onClick={() => openModal()}
+          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.9 }}
+          transition={{ duration: 0.25 }}
+          aria-label="Обсудить проект"
+          className="floating-discuss-btn"
+        >
+          <span className="floating-discuss-btn__dot" aria-hidden="true" />
+          <strong>Обсудить проект</strong>
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function BackToTop() {
   const [visible, setVisible] = useState(false);
 
@@ -1394,7 +1702,7 @@ function BackToTop() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-5 md:bottom-8 md:right-8 z-50 p-4 bg-cyber-neon text-white rounded-full shadow-[0_0_20px_rgba(157,111,255,0.5)] hover:bg-white hover:text-cyber-neon transition-all duration-300 group"
+          className="fixed bottom-6 right-5 md:bottom-8 md:right-8 z-50 p-4 bg-cyber-neon text-white rounded-full shadow-[0_8px_24px_rgba(37,99,235,0.35)] hover:bg-blue-700 transition-all duration-300 group"
           aria-label="Наверх"
         >
           <ArrowUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform duration-300" />
@@ -1404,26 +1712,79 @@ function BackToTop() {
   );
 }
 
+function CookieBanner() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    setVisible(!safeStorageGet(COOKIE_CONSENT_KEY));
+  }, []);
+
+  const accept = (value) => {
+    safeStorageSet(COOKIE_CONSENT_KEY, value);
+    trackGoal('cookie_choice', { choice: value });
+    setVisible(false);
+  };
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          className="cookie-banner"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 18 }}
+          transition={{ duration: 0.25 }}
+          role="region"
+          aria-label="Cookie и аналитика"
+        >
+          <div>
+            <strong>Cookie и аналитика</strong>
+            <p>
+              Сайт использует cookie для работы интерфейса, статистики и улучшения качества.
+              Подробнее — <a href="/cookies.html">в политике cookies</a>.
+            </p>
+          </div>
+          <div className="cookie-banner__actions">
+            <button type="button" className="cookie-banner__secondary" onClick={() => accept('necessary')}>
+              Только нужные
+            </button>
+            <button type="button" onClick={() => accept('all')}>
+              Принять
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function App() {
   const [modalData, setModalData] = useState(null);
-  const openModal = (plan = '', price = '', rawPrice = null) => setModalData({ plan, price, rawPrice });
+  const openModal = (plan = '', price = '', rawPrice = null) => {
+    trackGoal('lead_open', { plan: plan || 'Не указан', price: price || 'Не указана' });
+    setModalData({ plan, price, rawPrice });
+  };
   const closeModal = () => setModalData(null);
 
   return (
-    <main className="relative min-h-screen text-white selection:bg-cyber-neon selection:text-white font-body">
+    <main className="relative min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white font-body">
       <Header openModal={openModal} />
       <Hero openModal={openModal} />
       <Stats />
       <Services openModal={openModal} />
       <Portfolio openModal={openModal} />
+      <LiveProjects openModal={openModal} />
       <Testimonials />
       <Workflow openModal={openModal} />
       <Terms />
       <FAQ />
       <LandingBonus openModal={openModal} />
-      <Footer openModal={openModal} />
+      <ContactSection />
+      <Footer />
+      <FloatingDiscuss openModal={openModal} />
       <FloatingPromo openModal={openModal} />
       <BackToTop />
+      <CookieBanner />
       <ContactModal data={modalData} onClose={closeModal} />
     </main>
   );
